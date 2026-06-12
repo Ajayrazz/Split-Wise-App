@@ -98,10 +98,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [config('DJANGO_CHANNEL_LAYERS_URL', default='redis://localhost:6379')],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
