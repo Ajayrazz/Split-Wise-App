@@ -27,8 +27,16 @@ client.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const res = await axios.post(`${baseURL}/auth/refresh/`, {}, { withCredentials: true });
+        const storedRefresh = localStorage.getItem('refresh_token');
+        if (!storedRefresh) throw new Error('No refresh token available');
+
+        const res = await axios.post(`${baseURL}/auth/refresh/`, { refresh: storedRefresh }, { withCredentials: true });
         const newToken = res.data.access;
+        const newRefresh = res.data.refresh;
+        
+        if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+        localStorage.setItem('access_token', newToken);
+
         setAccessToken(newToken);
         
         window.dispatchEvent(new CustomEvent('tokenRefreshed', { detail: newToken }));
@@ -36,6 +44,8 @@ client.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return client(originalRequest);
       } catch (refreshError) {
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('access_token');
         setAccessToken(null);
         window.dispatchEvent(new CustomEvent('authFailed'));
         window.location.href = '/login';

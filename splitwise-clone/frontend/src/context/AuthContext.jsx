@@ -11,14 +11,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const res = await client.post('/auth/refresh/', {}, { _retry: true });
+        const storedRefresh = localStorage.getItem('refresh_token');
+        if (!storedRefresh) throw new Error('No refresh token');
+
+        const res = await client.post('/auth/refresh/', { refresh: storedRefresh }, { _retry: true });
         const token = res.data.access;
+        const newRefresh = res.data.refresh;
+        
+        if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
+        localStorage.setItem('access_token', token);
+
         setTokenState(token);
         setAccessToken(token);
         
         const userRes = await client.get('/auth/me/');
         setUser(userRes.data);
       } catch (err) {
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('access_token');
         setUser(null);
         setTokenState(null);
         setAccessToken(null);
@@ -45,6 +55,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const res = await client.post('/auth/login/', { email, password });
     const token = res.data.access;
+    const refresh = res.data.refresh;
+    
+    if (refresh) localStorage.setItem('refresh_token', refresh);
+    localStorage.setItem('access_token', token);
+
     setTokenState(token);
     setAccessToken(token);
     
@@ -59,8 +74,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await client.post('/auth/logout/');
+      const refresh = localStorage.getItem('refresh_token');
+      await client.post('/auth/logout/', { refresh });
     } catch(e) {}
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('access_token');
     setUser(null);
     setTokenState(null);
     setAccessToken(null);
