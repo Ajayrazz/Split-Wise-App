@@ -13,6 +13,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -27,6 +28,10 @@ INSTALLED_APPS = [
     'channels',
     
     'apps.users',
+    'apps.groups',
+    'apps.expenses',
+    'apps.settlements',
+    'apps.chat',
 ]
 
 MIDDLEWARE = [

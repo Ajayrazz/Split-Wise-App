@@ -54,7 +54,36 @@ splitwise-clone/
 │   ├── requirements.txt       # Python dependencies
 │   ├── manage.py              # Django entry point
 │   └── .env.example           # Environment variables template
-├── frontend/                  # React Vite frontend (empty for now)
+├── frontend/                  # React Vite frontend
+│   ├── .env.example
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       ├── index.css
+│       ├── api/
+│       │   └── client.js
+│       ├── components/
+│       │   ├── auth/
+│       │   ├── balances/
+│       │   ├── chat/
+│       │   ├── expenses/
+│       │   ├── groups/
+│       │   └── layout/
+│       │       ├── AppLayout.jsx
+│       │       ├── Sidebar.jsx
+│       │       └── TopBanner.jsx
+│       ├── context/
+│       │   └── AuthContext.jsx
+│       ├── hooks/
+│       │   ├── useAuth.js
+│       │   └── useWebSocket.js
+│       └── pages/
+│           └── LoginPage.jsx
 ├── AI_CONTEXT.md              # THE LIVING SYSTEM DOCUMENT
 └── .gitignore                 # Git ignore patterns
 
@@ -132,20 +161,20 @@ POST    /api/v1/auth/logout/             —  Logout and clear cookie    —  Au
 
 GET     /api/v1/auth/me/                 —  Get current user details   —  Auth Required: Yes ✅ IMPLEMENTED
 
-GET     /api/v1/groups/                  —  List user's groups         —  Auth Required: Yes
-POST    /api/v1/groups/                  —  Create a new group         —  Auth Required: Yes
-GET     /api/v1/groups/<id>/             —  Get group details          —  Auth Required: Yes
-POST    /api/v1/groups/<id>/members/     —  Add member to group        —  Auth Required: Yes
+GET     /api/v1/groups/                  —  List user's groups         —  Auth Required: Yes ✅ IMPLEMENTED
+POST    /api/v1/groups/                  —  Create a new group         —  Auth Required: Yes ✅ IMPLEMENTED
+GET     /api/v1/groups/<id>/             —  Get group details          —  Auth Required: Yes ✅ IMPLEMENTED
+POST    /api/v1/groups/<id>/members/     —  Add member to group        —  Auth Required: Yes ✅ IMPLEMENTED
 
-GET     /api/v1/groups/<id>/expenses/    —  List group expenses        —  Auth Required: Yes
-POST    /api/v1/groups/<id>/expenses/    —  Create new expense         —  Auth Required: Yes
-GET     /api/v1/expenses/<id>/           —  Get expense and splits     —  Auth Required: Yes
+GET     /api/v1/groups/<id>/expenses/    —  List group expenses        —  Auth Required: Yes ✅ IMPLEMENTED
+POST    /api/v1/groups/<id>/expenses/    —  Create new expense         —  Auth Required: Yes ✅ IMPLEMENTED
+GET     /api/v1/expenses/<id>/           —  Get expense and splits     —  Auth Required: Yes ✅ IMPLEMENTED
 
-GET     /api/v1/groups/<id>/settlements/ —  List group settlements     —  Auth Required: Yes
-POST    /api/v1/groups/<id>/settlements/ —  Create a settlement        —  Auth Required: Yes
+GET     /api/v1/groups/<id>/settlements/ —  List group settlements     —  Auth Required: Yes ✅ IMPLEMENTED
+POST    /api/v1/groups/<id>/settlements/ —  Create a settlement        —  Auth Required: Yes ✅ IMPLEMENTED
 
-GET     /api/v1/groups/<id>/balances/    —  Get peer-to-peer balances  —  Auth Required: Yes
-GET     /api/v1/expenses/<id>/chat/      —  Get chat history           —  Auth Required: Yes
+GET     /api/v1/groups/<id>/balances/    —  Get peer-to-peer balances  —  Auth Required: Yes ✅ IMPLEMENTED
+GET     /api/v1/expenses/<id>/chat/      —  Get chat history           —  Auth Required: Yes ✅ IMPLEMENTED
 
 ## 8. WEBSOCKET PROTOCOL
 - Connection URL pattern: ws://<host>/ws/chat/<expense_id>/
@@ -153,7 +182,7 @@ GET     /api/v1/expenses/<id>/chat/      —  Get chat history           —  Au
 - Message payload schema (JSON):
   { "type": "chat_message", "message": "<text>", "user_id": <int>, 
     "username": "<str>", "timestamp": "<ISO8601>" }
-- Server broadcast: same schema echoed to all connected clients in room
+- Server broadcast: same schema echoed to all connected clients in room (✅ Confirmed matching spec)
 
 ## 9. MATHEMATICAL ZERO-SUM ENGINE
 EQUAL:
@@ -179,7 +208,7 @@ SHARE:
 
 Mathematical invariant enforced: sum(ExpenseSplit.amount_owed) == Expense.total_amount
 This is enforced at the service layer in services/splitting.py AND validated 
-in the DRF serializer before any database write.
+in the DRF serializer before any database write. (✅ Confirmed matching spec)
 
 ## 10. BALANCE COMPUTATION ALGORITHM
 For a given group_id, the peer-to-peer balance between user A and user B is:
@@ -196,12 +225,12 @@ Implemented in services/balances.py, called by the /api/v1/groups/<id>/balances/
 
 ## 11. FRONTEND ARCHITECTURE
 - Layout: Fixed left sidebar (240px) + top metrics banner (64px) + main 
-  workspace viewport + optional right contextual pane (320px)
+  workspace viewport + optional right contextual pane (320px) (✅ Scaffolded)
 - Routing: React Router v6, routes: /, /login, /register, /groups/:id, 
   /groups/:id/expenses/:expenseId
 - Auth flow: JWT stored in memory (React Context). Refresh token stored in 
   HttpOnly cookie (set by backend). On app load, call /api/v1/auth/refresh/ 
-  to silently restore session.
+  to silently restore session. (✅ Implemented in AuthContext & client interceptors)
 - Unread chat: tracked client-side only; badge resets on expense pane open.
 
 ## 12. PHASE COMPLETION LOG
@@ -209,7 +238,7 @@ Implemented in services/balances.py, called by the /api/v1/groups/<id>/balances/
 |-------|--------|---------------------|
 | 0     | ✅ Complete | 2026-06-12T10:29:00Z |
 | 1     | ✅ Complete | 2026-06-12T10:40:00Z |
-| 2     | ⏳ Pending  |             |
-| 3     | ⏳ Pending  |             |
+| 2     | ✅ Complete | 2026-06-12T10:57:00Z |
+| 3     | ✅ Complete | 2026-06-12T11:12:00Z |
 | 4     | ⏳ Pending  |             |
 | 5     | ⏳ Pending  |             |
