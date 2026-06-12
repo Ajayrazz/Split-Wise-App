@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import client from '../../api/client';
 import useAuth from '../../hooks/useAuth';
+import { useSettings } from '../../hooks/useSettings';
 
 const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -113,7 +115,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
         {step === 2 && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="text-sm text-slate-600 mb-2">
-              Splitting ₹{totalAmount} as {splitType}
+              Splitting {settings.currencySymbol}{totalAmount} as {splitType}
             </div>
             
             <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -121,7 +123,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
                 <div key={m.user_id} className="flex justify-between items-center">
                   <span className="text-sm font-medium text-slate-700">{m.username}</span>
                   {splitType === 'EQUAL' ? (
-                    <span className="text-sm">₹{splits[m.user_id]?.toFixed(2)}</span>
+                    <span className="text-sm">{settings.currencySymbol}{splits[m.user_id]?.toFixed(2)}</span>
                   ) : (
                     <input 
                       type="number" step="0.01" required
@@ -140,7 +142,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
                 (splitType === 'PERCENTAGE' && currentSum !== 100) 
                 ? 'text-rose-600' : 'text-emerald-600'
               }`}>
-                Total: {currentSum.toFixed(2)} {splitType === 'PERCENTAGE' ? '%' : (splitType === 'SHARE' ? 'shares' : '₹')}
+                Total: {currentSum.toFixed(2)} {splitType === 'PERCENTAGE' ? '%' : (splitType === 'SHARE' ? 'shares' : settings.currencySymbol)}
               </div>
             )}
 

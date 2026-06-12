@@ -1,77 +1,70 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import client from '../api/client';
 import ExpenseList from '../components/expenses/ExpenseList';
 import BalanceLedger from '../components/balances/BalanceLedger';
 import ChatPanel from '../components/chat/ChatPanel';
 import useAuth from '../hooks/useAuth';
+import InviteMemberPanel from '../components/groups/InviteMemberPanel';
+import MemberRoster from '../components/groups/MemberRoster';
 
 const GroupPage = () => {
   const { id } = useParams();
   const [group, setGroup] = useState(null);
-  const [emailToInvite, setEmailToInvite] = useState('');
   const [activeChatExpense, setActiveChatExpense] = useState(null);
   const { user } = useAuth();
 
-  const fetchGroup = async () => {
+  const fetchGroup = useCallback(async () => {
     try {
       const res = await client.get(`/groups/${id}/`);
       setGroup(res.data);
     } catch(err) {}
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchGroup();
     setActiveChatExpense(null);
-  }, [id]);
+  }, [fetchGroup]);
 
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    try {
-      await client.post(`/groups/${id}/members/`, { user: emailToInvite });
-      setEmailToInvite('');
-      fetchGroup();
-    } catch(err) {
-      alert("Failed to add member: " + JSON.stringify(err.response?.data || {}));
-    }
-  };
-
-  if (!group) return <div>Loading group...</div>;
+  if (!group) return <div className="p-8 text-white">Loading group...</div>;
 
   return (
-    <div className={`flex h-full gap-6 transition-all duration-300 ${activeChatExpense ? 'mr-80' : ''}`}>
-      {/* Left Panel: 60% */}
-      <div className="flex-[3] flex flex-col min-h-0 bg-white border border-slate-200 rounded shadow-sm">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">{group.name}</h2>
-            <p className="text-sm text-slate-500">{group.members.length} Members: {group.members.map(m=>m.username).join(', ')}</p>
+    <div className={`h-full transition-all duration-300 ${activeChatExpense ? 'mr-80' : ''}`}>
+      <div className="lg:grid lg:grid-cols-3 gap-6 h-full">
+        {/* Left Column: 60% */}
+        <div className="col-span-2 flex flex-col min-h-0 bg-slate-900 border border-slate-700 rounded-xl shadow-lg">
+          <div className="p-6 border-b border-slate-700 bg-slate-800/50 rounded-t-xl">
+            <h2 className="text-2xl font-bold text-white mb-1">{group.name}</h2>
+            <div className="flex items-center gap-3 text-sm text-slate-400">
+              <span>{group.members?.length || 0} Members</span>
+              {group.created_at && (
+                <>
+                  <span className="text-slate-600">•</span>
+                  <span>Created {new Date(group.created_at).toLocaleDateString()}</span>
+                </>
+              )}
+            </div>
           </div>
-          <form onSubmit={handleAddMember} className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="Invite user by email or username" 
-              value={emailToInvite} 
-              onChange={e=>setEmailToInvite(e.target.value)} 
-              className="rounded border border-slate-300 p-1 text-sm w-48"
-              required
+          <div className="flex-1 overflow-y-auto p-6">
+            <ExpenseList 
+              groupId={id} 
+              members={group.members || []} 
+              onExpenseClick={(expense) => setActiveChatExpense(expense)} 
+              activeExpenseId={activeChatExpense?.id}
             />
-            <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Add</button>
-          </form>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <ExpenseList 
-            groupId={id} 
-            members={group.members} 
-            onExpenseClick={(expense) => setActiveChatExpense(expense)} 
-            activeExpenseId={activeChatExpense?.id}
-          />
-        </div>
-      </div>
 
-      {/* Right Panel: 40% */}
-      <div className="flex-[2] flex flex-col min-h-0 bg-slate-50 border border-slate-200 rounded shadow-sm overflow-hidden">
-        <BalanceLedger groupId={id} groupMembers={group.members} />
+        {/* Right Column: 40% */}
+        <div className="col-span-1 flex flex-col gap-5 min-h-0 overflow-y-auto pr-1">
+          <InviteMemberPanel groupId={id} onMemberAdded={fetchGroup} />
+          
+          <MemberRoster groupId={id} currentUserId={user?.id} />
+          
+          <div className="bg-slate-800/60 border border-slate-700 rounded-xl overflow-hidden">
+             <BalanceLedger groupId={id} groupMembers={group.members || []} />
+          </div>
+        </div>
       </div>
 
       <ChatPanel 

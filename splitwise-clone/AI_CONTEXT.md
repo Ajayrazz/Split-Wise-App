@@ -82,7 +82,7 @@ splitwise-clone/
 │       │   ├── chat/
 │       │   │   └── ChatPanel.jsx
 │       │   ├── expenses/
-│       │   │   ├── AddExpenseModal.jsx
+│       │   │   ├── AddExpenseModal.jsx    # [MODIFY]
 │       │   │   ├── ExpenseTable.jsx
 │       │   │   ├── ExpenseTableRow.jsx
 │       │   │   ├── split-inputs/
@@ -95,28 +95,35 @@ splitwise-clone/
 │       │   │       └── Step2_SplitAllocation.jsx
 │       │   ├── groups/
 │       │   │   ├── CreateGroupModal.jsx
-│       │   │   └── GroupList.jsx
+│       │   │   ├── GroupList.jsx
+│       │   │   ├── InviteMemberPanel.jsx
+│       │   │   └── MemberRoster.jsx
 │       │   ├── layout/
 │       │   │   ├── AppLayout.jsx
 │       │   │   ├── Sidebar.jsx
-│       │   │   └── TopBanner.jsx
+│       │   │   └── TopBanner.jsx          # [MODIFY]
 │       │   ├── settlements/
-│       │   │   └── SettlementModal.jsx
+│       │   │   └── SettlementModal.jsx    # [MODIFY]
 │       │   └── shared/
 │       │       ├── CardSkeleton.jsx
 │       │       ├── ErrorBoundary.jsx
 │       │       ├── PlaceholderPage.jsx
-│       │       └── TableSkeleton.jsx
+│       │       ├── TableSkeleton.jsx
+│       │       └── Toast.jsx
 │       ├── context/
-│       │   └── AuthContext.jsx
+│       │   ├── AuthContext.jsx
+│       │   └── GlobalBalanceContext.jsx   # [CREATE]
 │       ├── hooks/
+│       │   ├── useActivityFeed.js     # [CREATE]
 │       │   ├── useAuth.js
 │       │   ├── useExpenses.js
+│       │   ├── useGroupMembers.js
 │       │   ├── useSplitValidator.js
+│       │   ├── useToast.js
 │       │   └── useWebSocket.js
 │       └── pages/
-│           ├── ActivityPage.jsx
-│           ├── AnalyticsPage.jsx
+│           ├── ActivityPage.jsx       # [MODIFY]
+│           ├── AnalyticsPage.jsx      # [MODIFY]
 │           ├── BalancesPage.jsx
 │           ├── DashboardPage.jsx
 │           ├── ExpensesPage.jsx
@@ -124,7 +131,7 @@ splitwise-clone/
 │           ├── HelpPage.jsx
 │           ├── LoginPage.jsx
 │           ├── ProfilePage.jsx
-│           ├── RecentPage.jsx
+│           ├── RecentPage.jsx         # [MODIFY]
 │           ├── RegisterPage.jsx
 │           ├── SettingsPage.jsx
 │           └── SettlementsPage.jsx
@@ -286,3 +293,90 @@ Implemented in services/balances.py, called by the /api/v1/groups/<id>/balances/
 | 3     | ✅ Complete | 2026-06-12T11:12:00Z |
 | 4     | ✅ Complete | 2026-06-12T12:00:00Z |
 | 5     | ⏳ Pending  |             |
+| Phase A | ✅ Complete | 2026-06-13T00:54:00Z |
+| Phase B | ✅ Complete | 2026-06-13T01:00:00Z |
+| Phase C | ✅ Complete | 2026-06-13T01:06:00Z |
+
+## 15. GROUP MANAGEMENT — CONDITIONAL UI STATE REGISTRY
+
+### 15.1 Member Removal State Machine
+Each member in the MemberRoster can be in one of these states:
+
+| State         | Condition                        | UI Rendered               |
+|---------------|----------------------------------|---------------------------|
+| safe          | isBalanceLocked === false        | Red "Remove" button       |
+| locked        | isBalanceLocked === true         | Gray "Locked" chip        |
+| blocked       | blockedUserId === member.id      | Block Warning Card inline |
+| confirming    | confirmUserId === member.id      | Inline confirm widget     |
+| removing      | isRemoving[member.id] === true   | Spinner + "Removing..."   |
+| self          | member.id === currentUserId      | No action shown           |
+
+### 15.2 Balance Lock Epsilon Rule
+isBalanceLocked = Math.abs(balance.amount) > 0.001
+Rationale: Never use === 0 for float comparison. 0.001 epsilon guards against floating-point precision artifacts in JS.
+
+### 15.3 Invite State Machine
+| Status       | Trigger                          | UI Shown                  |
+|--------------|----------------------------------|---------------------------|
+| idle         | Input empty or <2 chars          | Plain input               |
+| searching    | Debounce fired, awaiting result  | Spinner in input          |
+| found        | API returned users               | Dropdown results          |
+| external     | No results + valid email format  | Amber invite notice card  |
+| adding       | POST /members/ in flight         | Button spinner            |
+| added        | POST success                     | Success toast             |
+| invite_sent  | inviteByEmail() resolved         | Success toast             |
+| error        | API error                        | Inline red error text     |
+
+### 15.4 External Invite Architecture Note
+The "Invite via Email" flow is CLIENT-SIDE ONLY. No pending_invite table exists in the database. The 800ms delay simulates an async email dispatch. A production implementation would require:
+  - POST /api/v1/invites/ endpoint
+  - PendingInvite model: { email, group_id, invited_by, token, expires_at }
+  - Email delivery via backend (SendGrid, SES, etc.)
+  - Invite acceptance flow on registration
+
+### 15.5 Defense in Depth
+Member removal is protected at TWO layers:
+  Layer 1 (Frontend): useGroupMembers.removeMember() checks isBalanceLocked before firing any API call. If locked, sets blockedUserId and returns. No HTTP request made.
+  Layer 2 (Backend): DELETE /api/v1/groups/<id>/members/<uid>/ returns HTTP 409 BALANCE_OUTSTANDING if balance != 0. This catches any direct API calls that bypass the UI.
+
+## 16. GLOBAL BALANCE CONTEXT
+
+### 16.1 Purpose
+GlobalBalanceContext aggregates peer-to-peer balances across all of 
+the current user's groups into three scalar metrics displayed in 
+TopBanner: totalOwedToMe, totalIOwe, net.
+
+### 16.2 Refresh Mechanism
+triggerRefresh() increments a refreshTrigger integer in context state.
+The useEffect in GlobalBalanceProvider depends on refreshTrigger, so 
+incrementing it re-fires the full fetch-and-aggregate pipeline.
+Components that call triggerRefresh(): AddExpenseModal, 
+SettlementModal, MemberRoster (executeRemoval).
+
+### 16.3 Aggregation Logic
+For each balance entry { from_user_id, to_user_id, amount }:
+  if to_user_id === currentUser.id → add to totalOwedToMe
+  if from_user_id === currentUser.id → add to totalIOwe
+Epsilon: skip balances where amount <= 0.001
+
+## 17. ANALYTICS & ACTIVITY PAGES
+
+### 17.1 Data Sources
+All analytics data is derived client-side from these endpoints:
+  GET /api/v1/groups/
+  GET /api/v1/groups/<id>/expenses/
+  GET /api/v1/groups/<id>/settlements/
+No dedicated analytics endpoints exist. All aggregation is JS.
+
+### 17.2 Activity Feed Normalization
+useActivityFeed merges expenses and settlements into a unified 
+chronological array with shape:
+  { id, type, timestamp, groupId, groupName, actor, description, amount }
+Sorted by timestamp DESC after merge.
+
+### 17.3 Analytics Panels (all client-computed)
+Panel 1: Spending by group — sum(expense.total_amount) per group
+Panel 2: Split type counts — count by split_type enum
+Panel 3: Monthly trend — group by created_at month, sum amounts
+Panel 4: Personal summary — filter by paid_by === currentUser.id
+

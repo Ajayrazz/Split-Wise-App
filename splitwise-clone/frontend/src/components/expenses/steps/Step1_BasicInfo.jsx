@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import client from '../../../api/client';
+import { useSettings } from '../../../hooks/useSettings';
 
 const Step1_BasicInfo = ({ formData, setFormData, onNext }) => {
+  const { settings } = useSettings();
   const [groups, setGroups] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
 
@@ -54,7 +56,7 @@ const Step1_BasicInfo = ({ formData, setFormData, onNext }) => {
       <div>
         <label className="block text-sm font-medium text-slate-400 mb-1">Total Amount</label>
         <div className="relative">
-          <span className="absolute left-4 top-2.5 text-slate-400">₹</span>
+          <span className="absolute left-4 top-2.5 text-slate-400">{settings.currencySymbol}</span>
           <input 
             type="number" 
             step="0.01" 

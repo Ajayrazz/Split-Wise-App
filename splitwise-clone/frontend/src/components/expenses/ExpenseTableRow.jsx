@@ -1,6 +1,8 @@
 import React from 'react';
+import { useSettings } from '../../hooks/useSettings';
 
 const ExpenseTableRow = ({ expense, onClick }) => {
+  const { settings } = useSettings();
   const dateObj = new Date(expense.created_at);
   const formattedDate = dateObj.toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric'
@@ -30,7 +32,7 @@ const ExpenseTableRow = ({ expense, onClick }) => {
       </td>
       <td className="px-6 py-4 text-left text-slate-400">{formattedDate}</td>
       <td className="px-6 py-4 text-right font-mono font-semibold text-emerald-400">
-        ₹{parseFloat(expense.total_amount).toFixed(2)}
+        {settings.currencySymbol}{parseFloat(expense.total_amount).toFixed(2)}
       </td>
     </tr>
   );

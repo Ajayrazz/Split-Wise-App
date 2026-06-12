@@ -1,68 +1,95 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, matchPath } from 'react-router-dom';
+import { useGlobalBalance } from '../../context/GlobalBalanceContext';
+import { useSettings } from '../../hooks/useSettings';
 import client from '../../api/client';
-import useAuth from '../../hooks/useAuth';
+import { Menu } from 'lucide-react';
 
-const TopBanner = () => {
-  const { user } = useAuth();
-  const [metrics, setMetrics] = useState({ owed: 0, owe: 0, net: 0 });
-
-  const fetchGlobalMetrics = async () => {
-    try {
-      const groupsRes = await client.get('/groups/');
-      const groups = groupsRes.data;
-
-      let totalOwed = 0;
-      let totalOwe = 0;
-
-      await Promise.all(groups.map(async (g) => {
-        const balRes = await client.get(`/groups/${g.id}/balances/`);
-        const balances = balRes.data;
-        balances.forEach(b => {
-          const amt = parseFloat(b.amount);
-          if (amt > 0) {
-            if (b.to_user_id === user.id) totalOwed += amt;
-            else if (b.from_user_id === user.id) totalOwe += amt;
-          }
-        });
-      }));
-
-      setMetrics({
-        owed: totalOwed,
-        owe: totalOwe,
-        net: totalOwed - totalOwe
-      });
-    } catch (err) { }
-  };
+const TopBanner = ({ onMenuClick }) => {
+  const { metrics } = useGlobalBalance();
+  const { settings } = useSettings();
+  const location = useLocation();
+  const [groupName, setGroupName] = useState('');
 
   useEffect(() => {
-    if (user) {
-      fetchGlobalMetrics();
-      const handler = () => fetchGlobalMetrics();
-      window.addEventListener('balancesUpdated', handler);
-      return () => window.removeEventListener('balancesUpdated', handler);
+    const match = matchPath({ path: '/groups/:id' }, location.pathname);
+    if (match && match.params.id) {
+      client.get(`/groups/${match.params.id}/`)
+        .then(res => setGroupName(res.data.name))
+        .catch(() => setGroupName('Group Details'));
+    } else {
+      setGroupName('');
     }
-  }, [user]);
+  }, [location.pathname]);
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Dashboard';
+    if (path.startsWith('/expenses')) return 'All Expenses';
+    if (path.startsWith('/balances')) return 'Balances';
+    if (path.startsWith('/settlements')) return 'Settlements';
+    if (path.startsWith('/activity')) return 'Activity';
+    if (path.startsWith('/analytics')) return 'Analytics';
+    if (path.startsWith('/recent')) return 'Recent';
+    if (path.startsWith('/profile')) return 'Profile';
+    if (path.startsWith('/settings')) return 'Settings';
+    if (path.startsWith('/help')) return 'Help';
+    if (path.startsWith('/groups/')) return groupName || 'Loading...';
+    return 'Splitwise Clone';
+  };
 
   return (
-    <div className="h-16 bg-slate-900 border-b border-slate-800 flex items-center px-6 shrink-0 shadow-sm z-10 justify-between">
-      <h1 className="text-lg font-semibold text-white">Overview</h1>
-      <div className="flex space-x-6 text-sm">
-        <div className="flex flex-col items-end">
-          <span className="text-slate-400">You are owed</span>
-          <span className="font-semibold text-emerald-400">₹{metrics.owed.toFixed(2)}</span>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className="text-slate-400">You owe</span>
-          <span className="font-semibold text-rose-400">₹{metrics.owe.toFixed(2)}</span>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className="text-slate-400">Total net</span>
-          {metrics.net === 0 ? (
-            <span className="font-semibold text-slate-400">Settled up ✓</span>
+    <div className="bg-slate-900 border-b border-slate-700/60 px-4 md:px-6 flex items-center justify-between h-16 shrink-0 z-10 w-full overflow-hidden">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden text-slate-400 hover:text-white p-1 -ml-1 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="text-white font-semibold text-lg truncate max-w-[150px] sm:max-w-xs">{getPageTitle()}</h1>
+      </div>
+      
+      <div className="flex flex-row gap-4 md:gap-6 overflow-x-auto no-scrollbar items-center justify-end pl-4">
+        {/* TILE 1 */}
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-slate-400 text-xs uppercase tracking-wider">You Are Owed</span>
+          {metrics.isLoading ? (
+            <div className="animate-pulse bg-slate-700 rounded h-5 w-16" />
           ) : (
-            <span className={`font-semibold ${metrics.net > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              Net: {metrics.net > 0 ? '+' : '-'}₹{Math.abs(metrics.net).toFixed(2)}
-            </span>
+            <span className="text-emerald-400 font-mono font-semibold text-base">{settings.currencySymbol}{metrics.totalOwedToMe.toFixed(2)}</span>
+          )}
+        </div>
+
+        <div className="w-px h-8 bg-slate-700 self-center" />
+
+        {/* TILE 2 */}
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-slate-400 text-xs uppercase tracking-wider">You Owe</span>
+          {metrics.isLoading ? (
+            <div className="animate-pulse bg-slate-700 rounded h-5 w-16" />
+          ) : (
+            <span className="text-red-400 font-mono font-semibold text-base">{settings.currencySymbol}{metrics.totalIOwe.toFixed(2)}</span>
+          )}
+        </div>
+
+        <div className="w-px h-8 bg-slate-700 self-center" />
+
+        {/* TILE 3 */}
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-slate-400 text-xs uppercase tracking-wider">Net</span>
+          {metrics.isLoading ? (
+            <div className="animate-pulse bg-slate-700 rounded h-5 w-20" />
+          ) : (
+            Math.abs(metrics.net) > 0.001 ? (
+              metrics.net > 0 ? (
+                <span className="text-emerald-400 font-mono font-semibold text-base">{settings.currencySymbol}{metrics.net.toFixed(2)}</span>
+              ) : (
+                <span className="text-red-400 font-mono font-semibold text-base">-{settings.currencySymbol}{Math.abs(metrics.net).toFixed(2)}</span>
+              )
+            ) : (
+              <span className="text-slate-400 font-mono font-semibold text-base">Settled ✓</span>
+            )
           )}
         </div>
       </div>

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useSettings } from '../../hooks/useSettings';
 
 const BalanceCard = ({ balance, currentUserId, onSettle }) => {
+  const { settings } = useSettings();
   const amt = parseFloat(balance.amount);
   
   const payerId = balance.from_user_id;
@@ -41,7 +43,7 @@ const BalanceCard = ({ balance, currentUserId, onSettle }) => {
         </div>
         <div>
           <p className="text-white font-medium">{text}</p>
-          <p className="text-sm text-slate-400 font-mono mt-0.5">₹{amt.toFixed(2)}</p>
+          <p className="text-sm text-slate-400 font-mono mt-0.5">{settings.currencySymbol}{amt.toFixed(2)}</p>
         </div>
       </div>
       

@@ -1,88 +1,86 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, Receipt } from 'lucide-react';
-import client from '../api/client';
-import useAuth from '../hooks/useAuth';
+import React from 'react';
+import { useActivityFeed } from '../hooks/useActivityFeed';
+import { useSettings } from '../hooks/useSettings';
 import CardSkeleton from '../components/shared/CardSkeleton';
+import { useNavigate } from 'react-router-dom';
 
 const RecentPage = () => {
-  const { user } = useAuth();
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { activities, isLoading } = useActivityFeed();
+  const { settings } = useSettings();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchRecent = async () => {
-      try {
-        const groupsRes = await client.get('/groups/');
-        const groups = groupsRes.data;
-        
-        let allExpenses = [];
-        
-        await Promise.all(groups.map(async (group) => {
-          try {
-            const expRes = await client.get(`/groups/${group.id}/expenses/`);
-            const expenses = expRes.data.map(exp => ({
-              ...exp,
-              group_name: group.name,
-              payer_name: exp.paid_by === user.id ? 'You' : (group.members.find(m => m.user_id === exp.paid_by)?.username || 'Someone')
-            }));
-            allExpenses = [...allExpenses, ...expenses];
-          } catch(e) { console.error(e) }
-        }));
-        
-        allExpenses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setRecentExpenses(allExpenses.slice(0, 20));
-      } catch(err) {
-        console.error("Failed to fetch recent expenses", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const recentExpenses = activities
+    .filter(item => item.type === 'expense')
+    .slice(0, 10);
+
+  const getFormatDate = (timestamp) => {
+    const d = new Date(timestamp);
+    const today = new Date();
+    const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     
-    if (user) {
-      fetchRecent();
-    }
-  }, [user]);
+    if (isToday) return `Today at ${time}`;
+    return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} at ${time}`;
+  };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-in fade-in duration-300">
-      <div className="mb-8">
+    <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-in fade-in duration-300">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Recent Transactions</h1>
         <p className="text-slate-500 mt-2">Your most recent expenses across all groups.</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {loading ? (
-          <div className="p-6">
-             <CardSkeleton count={4} />
+      <div>
+        {isLoading ? (
+          <div className="space-y-4">
+            <CardSkeleton count={4} />
           </div>
         ) : recentExpenses.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            No recent transactions found.
+          <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-10 flex flex-col items-center justify-center text-center">
+            <p className="text-slate-400 font-medium mb-6">No recent expenses. Start by creating a group!</p>
+            <button
+              onClick={() => navigate('/groups')}
+              className="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Go to Groups
+            </button>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <div className="grid grid-cols-1 gap-4 max-w-3xl">
             {recentExpenses.map((item) => (
-              <li key={item.id} className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-slate-100 text-slate-600`}>
-                    <Receipt />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">{item.description}</h3>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                      <span className="font-medium px-2 py-0.5 bg-slate-100 rounded-md text-slate-600">{item.group_name}</span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1"><Clock size={12} /> {new Date(item.created_at).toLocaleDateString()}</span>
-                    </div>
+              <div key={item.id} className="bg-slate-800/60 border border-slate-700 rounded-xl p-5 flex items-center justify-between">
+                
+                {/* LEFT */}
+                <div>
+                  <p className="text-white font-medium text-sm mb-2">{item.meta.description}</p>
+                  <div className="flex items-center gap-3 text-slate-400 text-xs">
+                    <span className="bg-slate-700 text-slate-300 px-2 py-0.5 rounded">
+                      {item.groupName}
+                    </span>
+                    <span>Paid by {item.actor}</span>
+                    <span>•</span>
+                    <span>{getFormatDate(item.timestamp)}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-slate-900">₹{parseFloat(item.total_amount).toFixed(2)}</p>
-                  <p className="text-xs text-slate-500 mt-1 font-medium">{item.payer_name} paid ₹{parseFloat(item.total_amount).toFixed(2)}</p>
+
+                {/* RIGHT */}
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-emerald-400 font-mono font-semibold text-base">
+                    {settings.currencySymbol}{item.amount.toFixed(2)}
+                  </span>
+                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                    item.meta.split_type === 'EQUAL' ? 'bg-emerald-500/20 text-emerald-400' :
+                    item.meta.split_type === 'UNEQUAL' ? 'bg-blue-500/20 text-blue-400' :
+                    item.meta.split_type === 'PERCENTAGE' ? 'bg-purple-500/20 text-purple-400' :
+                    'bg-amber-500/20 text-amber-400'
+                  }`}>
+                    {item.meta.split_type}
+                  </span>
                 </div>
-              </li>
+
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

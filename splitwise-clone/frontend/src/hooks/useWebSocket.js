@@ -11,7 +11,7 @@ export function useWebSocket(expenseId, accessToken) {
     if (!expenseId || !accessToken) return;
 
     setConnectionStatus('connecting');
-    const httpUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    const httpUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
     const wsBaseUrl = httpUrl.replace(/^http/, 'ws');
     const wsUrl = `${wsBaseUrl}/ws/chat/${expenseId}/?token=${accessToken}`;
     const ws = new WebSocket(wsUrl);
@@ -42,8 +42,11 @@ export function useWebSocket(expenseId, accessToken) {
       }
     };
 
-    ws.onerror = () => {
-      ws.close();
+    ws.onerror = (err) => {
+      // Ignore errors if the socket is being closed intentionally during connecting
+      if (ws.readyState !== WebSocket.CLOSING && ws.readyState !== WebSocket.CLOSED) {
+        console.error('WebSocket encountered an error:', err);
+      }
     };
 
     wsRef.current = ws;
@@ -56,7 +59,12 @@ export function useWebSocket(expenseId, accessToken) {
 
     return () => {
       if (wsRef.current) {
-        wsRef.current.close();
+        const socket = wsRef.current;
+        if (socket.readyState === WebSocket.CONNECTING) {
+          socket.onopen = () => socket.close();
+        } else {
+          socket.close();
+        }
       }
     };
   }, [connect]);

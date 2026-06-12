@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import client from '../../api/client';
-import useAuth from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth'; // Force Vite cache bust
+import { useSettings } from '../../hooks/useSettings';
 
 const BalanceLedger = ({ groupId, groupMembers }) => {
+  const { settings } = useSettings();
   const [balances, setBalances] = useState([]);
   const [settlementPayee, setSettlementPayee] = useState(null);
   const [settlementAmount, setSettlementAmount] = useState('');
@@ -61,7 +63,7 @@ const BalanceLedger = ({ groupId, groupMembers }) => {
           return (
             <div key={idx} className="flex justify-between items-center p-3 border rounded border-slate-200 shadow-sm">
               <span className={highlightClass}>
-                {payer.username} owes {payee.username} ₹{b.amount}
+                {payer.username} owes {payee.username} {settings.currencySymbol}{b.amount}
               </span>
               {payer.id === user.id && (
                 <button

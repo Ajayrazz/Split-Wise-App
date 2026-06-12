@@ -1,4 +1,8 @@
+import { useState } from 'react';
+import { useSettings } from './useSettings';
+
 export function useSplitValidator(splitType, totalAmount, splits) {
+  const { settings } = useSettings();
   const total = parseFloat(totalAmount) || 0;
 
   if (splitType === 'EQUAL') {
@@ -11,7 +15,7 @@ export function useSplitValidator(splitType, totalAmount, splits) {
     const isValid = remainder === 0;
     let errorMessage = null;
     if (remainder !== 0) {
-      errorMessage = `₹${Math.abs(remainder).toFixed(2)} ${remainder > 0 ? 'still unallocated' : 'over-allocated'}`;
+      errorMessage = `${settings.currencySymbol}${Math.abs(remainder).toFixed(2)} ${remainder > 0 ? 'still unallocated' : 'over-allocated'}`;
     }
     return { isValid, remainder, errorMessage };
   }

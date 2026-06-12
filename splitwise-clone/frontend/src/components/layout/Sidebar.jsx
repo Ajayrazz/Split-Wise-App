@@ -7,7 +7,7 @@ import {
 import useAuth from '../../hooks/useAuth';
 import CreateGroupModal from '../groups/CreateGroupModal';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
@@ -28,35 +28,52 @@ const Sidebar = () => {
 
   return (
     <>
-      <div className="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full">
-        <div className="h-16 flex items-center px-6 font-bold text-2xl border-b border-slate-800 text-emerald-400">
-          SplitwiseClone
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 z-40 md:hidden transition-opacity"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar Container */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full
+        transform transition-transform duration-300 ease-in-out
+        md:relative md:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="h-16 flex items-center justify-between px-6 font-bold text-xl md:text-2xl border-b border-slate-800 text-emerald-400">
+          <span>SplitwiseClone</span>
+          <button className="md:hidden text-slate-400 hover:text-white" onClick={onClose}>
+            &times;
+          </button>
         </div>
         
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
           <nav className="space-y-1">
-            <Link to="/" className={getNavLinkClass('/')}>
+            <Link to="/" onClick={onClose} className={getNavLinkClass('/')}>
               <Home size={18} className={getIconClass('/')} /> Dashboard
             </Link>
-            <Link to="/groups" className={getNavLinkClass('/groups')}>
+            <Link to="/groups" onClick={onClose} className={getNavLinkClass('/groups')}>
               <Users size={18} className={getIconClass('/groups')} /> Groups
             </Link>
-            <Link to="/expenses" className={getNavLinkClass('/expenses')}>
+            <Link to="/expenses" onClick={onClose} className={getNavLinkClass('/expenses')}>
               <Receipt size={18} className={getIconClass('/expenses')} /> Expenses
             </Link>
-            <Link to="/balances" className={getNavLinkClass('/balances')}>
+            <Link to="/balances" onClick={onClose} className={getNavLinkClass('/balances')}>
               <Scale size={18} className={getIconClass('/balances')} /> Balances
             </Link>
-            <Link to="/settlements" className={getNavLinkClass('/settlements')}>
+            <Link to="/settlements" onClick={onClose} className={getNavLinkClass('/settlements')}>
               <Coins size={18} className={getIconClass('/settlements')} /> Settlements
             </Link>
-            <Link to="/activity" className={getNavLinkClass('/activity')}>
+            <Link to="/activity" onClick={onClose} className={getNavLinkClass('/activity')}>
               <Bell size={18} className={getIconClass('/activity')} /> Activity
             </Link>
-            <Link to="/analytics" className={getNavLinkClass('/analytics')}>
+            <Link to="/analytics" onClick={onClose} className={getNavLinkClass('/analytics')}>
               <BarChart2 size={18} className={getIconClass('/analytics')} /> Analytics
             </Link>
-            <Link to="/recent" className={getNavLinkClass('/recent')}>
+            <Link to="/recent" onClick={onClose} className={getNavLinkClass('/recent')}>
               <Clock size={18} className={getIconClass('/recent')} /> Recent
             </Link>
           </nav>
@@ -81,13 +98,13 @@ const Sidebar = () => {
 
         <div className="p-4 border-t border-slate-800">
           <nav className="space-y-1 mb-4">
-            <Link to="/profile" className={getNavLinkClass('/profile')}>
+            <Link to="/profile" onClick={onClose} className={getNavLinkClass('/profile')}>
               <User size={18} className={getIconClass('/profile')} /> Profile
             </Link>
-            <Link to="/settings" className={getNavLinkClass('/settings')}>
+            <Link to="/settings" onClick={onClose} className={getNavLinkClass('/settings')}>
               <Settings size={18} className={getIconClass('/settings')} /> Settings
             </Link>
-            <Link to="/help" className={getNavLinkClass('/help')}>
+            <Link to="/help" onClick={onClose} className={getNavLinkClass('/help')}>
               <HelpCircle size={18} className={getIconClass('/help')} /> Help
             </Link>
           </nav>

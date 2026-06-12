@@ -12,11 +12,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f'chat_{self.expense_id}'
         self.user = self.scope['user']
 
+        print(f"Connecting user {self.user} to expense {self.expense_id}")
+
         if not self.user.is_authenticated:
+            print("User is not authenticated!")
             await self.close(code=4003)
             return
 
         exists, is_member = await self.verify_expense_and_membership()
+        print(f"Exists: {exists}, Is Member: {is_member}")
         if not exists:
             await self.close(code=4004)
             return

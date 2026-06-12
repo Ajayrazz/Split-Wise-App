@@ -25,6 +25,8 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import { GlobalBalanceProvider } from './context/GlobalBalanceContext';
+import { SettingsProvider } from './context/SettingsContext';
 
 const App = () => {
   return (
@@ -34,7 +36,11 @@ const App = () => {
       <Route path="/" element={
         <ProtectedRoute>
           <ErrorBoundary>
-            <AppLayout />
+            <SettingsProvider>
+              <GlobalBalanceProvider>
+                <AppLayout />
+              </GlobalBalanceProvider>
+            </SettingsProvider>
           </ErrorBoundary>
         </ProtectedRoute>
       }>

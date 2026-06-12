@@ -1,111 +1,115 @@
-import React, { useEffect, useState } from 'react';
-import { PlusCircle, UserPlus, FileText } from 'lucide-react';
-import client from '../api/client';
-import useAuth from '../hooks/useAuth';
+import React, { useState } from 'react';
+import { useActivityFeed } from '../hooks/useActivityFeed';
+import { useSettings } from '../hooks/useSettings';
 import CardSkeleton from '../components/shared/CardSkeleton';
+import { Activity } from 'lucide-react';
 
 const ActivityPage = () => {
-  const { user } = useAuth();
-  const [activity, setActivity] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { activities, isLoading } = useActivityFeed();
+  const { settings } = useSettings();
+  const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    const fetchActivity = async () => {
-      try {
-        const groupsRes = await client.get('/groups/');
-        const groups = groupsRes.data;
-        
-        let allActivity = [];
-        
-        await Promise.all(groups.map(async (group) => {
-          try {
-             allActivity.push({
-                id: `group-${group.id}`,
-                type: 'group',
-                user: group.created_by === user.id ? 'You' : (group.members.find(m => m.user_id === group.created_by)?.username || 'Someone'),
-                action: 'created the group',
-                target: group.name,
-                created_at: group.created_at,
-                icon: <UserPlus size={20} />,
-                color: 'text-purple-500',
-                bg: 'bg-purple-100'
-             });
+  const filteredActivities = activities.filter(item => {
+    if (filter === 'all') return true;
+    return item.type === filter;
+  });
 
-            const expRes = await client.get(`/groups/${group.id}/expenses/`);
-            const expenses = expRes.data.map(exp => ({
-              id: `exp-${exp.id}`,
-              type: 'expense',
-              user: exp.created_by === user.id ? 'You' : (group.members.find(m => m.user_id === exp.created_by)?.username || 'Someone'),
-              action: 'added an expense',
-              target: exp.description,
-              created_at: exp.created_at,
-              icon: <PlusCircle size={20} />,
-              color: 'text-emerald-500',
-              bg: 'bg-emerald-100'
-            }));
-            
-            const setRes = await client.get(`/groups/${group.id}/settlements/`);
-            const settlements = setRes.data.map(settle => {
-               const payerName = settle.payer_id === user.id ? 'You' : (group.members.find(m => m.user_id === settle.payer_id)?.username || 'Someone');
-               const payeeName = settle.payee_id === user.id ? 'You' : (group.members.find(m => m.user_id === settle.payee_id)?.username || 'Someone');
-               return {
-                  id: `set-${settle.id}`,
-                  type: 'settlement',
-                  user: payerName,
-                  action: `settled up ₹${parseFloat(settle.amount).toFixed(2)} with`,
-                  target: payeeName,
-                  created_at: settle.created_at,
-                  icon: <FileText size={20} />,
-                  color: 'text-amber-500',
-                  bg: 'bg-amber-100'
-               };
-            });
-
-            allActivity = [...allActivity, ...expenses, ...settlements];
-          } catch(e) { console.error(e) }
-        }));
-        
-        allActivity.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setActivity(allActivity.slice(0, 30));
-      } catch(err) {
-        console.error("Failed to fetch activity", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const getFormatDate = (timestamp) => {
+    const d = new Date(timestamp);
+    const today = new Date();
+    const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     
-    if (user) {
-      fetchActivity();
-    }
-  }, [user]);
+    if (isToday) return `Today at ${time}`;
+    return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} at ${time}`;
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-in fade-in duration-300">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Activity Feed</h1>
-          <p className="text-slate-500 mt-2">See what's happening across all your groups.</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-slate-900">Activity Feed</h1>
+        <p className="text-slate-500 mt-2">All recent actions across your groups, sorted newest first.</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        {loading ? (
-          <CardSkeleton count={5} />
-        ) : activity.length === 0 ? (
-           <div className="text-center text-slate-500 p-8">No activity yet.</div>
+      <div className="flex gap-3 mb-8">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+            filter === 'all' 
+              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
+              : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700/50'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFilter('expense')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+            filter === 'expense' 
+              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
+              : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700/50'
+          }`}
+        >
+          Expenses
+        </button>
+        <button
+          onClick={() => setFilter('settlement')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+            filter === 'settlement' 
+              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
+              : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700/50'
+          }`}
+        >
+          Settlements
+        </button>
+      </div>
+
+      <div>
+        {isLoading ? (
+          <div className="space-y-4">
+            <CardSkeleton count={5} />
+          </div>
+        ) : filteredActivities.length === 0 ? (
+          <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-10 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+              <Activity className="text-slate-600" size={32} />
+            </div>
+            <p className="text-slate-400 font-medium">No activity yet. Create a group and add some expenses!</p>
+          </div>
         ) : (
-          <div className="relative border-l border-slate-200 ml-4 space-y-8 pb-4">
-            {activity.map((item) => (
-              <div key={item.id} className="relative pl-8">
-                <div className={`absolute -left-5 top-0 w-10 h-10 rounded-full flex items-center justify-center border-4 border-white ${item.bg} ${item.color} shadow-sm`}>
-                  {item.icon}
-                </div>
+          <div className="relative border-l-2 border-slate-700 ml-3 space-y-6 pb-6">
+            {filteredActivities.map((item) => (
+              <div key={item.id} className="relative pl-8 pb-6">
+                <div 
+                  className={`absolute left-[-6px] top-2 w-2.5 h-2.5 rounded-full border-2 border-slate-700 ${
+                    item.type === 'expense' ? 'bg-blue-500' :
+                    item.type === 'settlement' ? 'bg-emerald-500' :
+                    'bg-purple-500'
+                  }`}
+                />
                 
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-slate-300 transition-colors">
-                  <p className="text-slate-800">
-                    <span className="font-semibold text-slate-900">{item.user}</span> {item.action} <span className="font-semibold text-slate-900">{item.target}</span>
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1.5 font-medium">{new Date(item.created_at).toLocaleString()}</p>
+                <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
+                  <div className="flex justify-between items-start gap-4 mb-2">
+                    <p className="text-white text-sm">
+                      {item.description}
+                    </p>
+                    {item.amount !== null && (
+                      <span className={`px-2 py-0.5 rounded text-xs font-mono shrink-0 ${
+                        item.type === 'expense' ? 'bg-blue-500/15 text-blue-300' : 'bg-emerald-500/15 text-emerald-300'
+                      }`}>
+                        {settings.currencySymbol}{item.amount.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded">
+                      {item.groupName}
+                    </span>
+                    <span className="text-slate-500 text-xs">
+                      {getFormatDate(item.timestamp)}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

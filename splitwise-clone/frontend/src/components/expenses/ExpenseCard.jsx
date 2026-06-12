@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import useAuth from '../../hooks/useAuth';
+import { useSettings } from '../../hooks/useSettings';
 
 const ExpenseCard = ({ expense, isActive, onClick }) => {
   const { accessToken } = useAuth();
+  const { settings } = useSettings();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { messages } = useWebSocket(expense.id, accessToken);
@@ -23,7 +25,7 @@ const ExpenseCard = ({ expense, isActive, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className={`p-3 rounded border cursor-pointer transition-colors relative ${isActive ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}
+      className={`p-3 rounded border cursor-pointer transition-colors relative ${isActive ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -31,7 +33,7 @@ const ExpenseCard = ({ expense, isActive, onClick }) => {
           <p className="text-xs text-slate-500">Paid by {expense.paid_by.username}</p>
         </div>
         <div className="text-right">
-          <div className="font-bold text-slate-800">₹{expense.total_amount}</div>
+          <div className="font-bold text-slate-800">{settings.currencySymbol}{expense.total_amount}</div>
           <div className="text-xs text-slate-500">{new Date(expense.created_at).toLocaleDateString()}</div>
         </div>
       </div>

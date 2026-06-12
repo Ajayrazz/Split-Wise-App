@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Step1_BasicInfo from './steps/Step1_BasicInfo';
 import Step2_SplitAllocation from './steps/Step2_SplitAllocation';
 import { useExpenses } from '../../hooks/useExpenses';
+import { useGlobalBalance } from '../../context/GlobalBalanceContext';
 
 const AddExpenseModal = ({ onClose, onExpenseCreated }) => {
   const [step, setStep] = useState(1);
@@ -9,6 +10,7 @@ const AddExpenseModal = ({ onClose, onExpenseCreated }) => {
   const [apiError, setApiError] = useState(null);
   
   const { createExpense } = useExpenses();
+  const { triggerRefresh } = useGlobalBalance();
 
   const [formData, setFormData] = useState({
     groupId: '',
@@ -51,6 +53,7 @@ const AddExpenseModal = ({ onClose, onExpenseCreated }) => {
       setApiError(JSON.stringify(res.error.fields || "An error occurred"));
       setIsSubmitting(false);
     } else {
+      triggerRefresh();
       if (onExpenseCreated) onExpenseCreated();
       onClose();
     }

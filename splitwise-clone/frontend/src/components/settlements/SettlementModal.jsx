@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import client from '../../api/client';
+import { useGlobalBalance } from '../../context/GlobalBalanceContext';
+import { useSettings } from '../../hooks/useSettings';
 
 const SettlementModal = ({ isOpen, onClose, groupId, payerId, payeeId, payerName, payeeName, maxAmount, onSettled }) => {
   const [amount, setAmount] = useState(maxAmount || '');
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { triggerRefresh } = useGlobalBalance();
+  const { settings } = useSettings();
 
   // Update amount when modal opens with new maxAmount
   React.useEffect(() => {
@@ -35,6 +39,7 @@ const SettlementModal = ({ isOpen, onClose, groupId, payerId, payeeId, payerName
         payee_id: payeeId,
         amount: parsedAmount
       });
+      triggerRefresh();
       onSettled();
       onClose();
     } catch (err) {
@@ -72,14 +77,14 @@ const SettlementModal = ({ isOpen, onClose, groupId, payerId, payeeId, payerName
             </div>
             <div className="flex justify-between items-center pt-3 border-t border-slate-700">
               <span className="text-slate-400 text-sm">Max Balance</span>
-              <span className="font-mono text-emerald-400">₹{parseFloat(maxAmount || 0).toFixed(2)}</span>
+              <span className="font-mono text-emerald-400">{settings.currencySymbol}{parseFloat(maxAmount || 0).toFixed(2)}</span>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">Amount to Settle</label>
             <div className="relative">
-              <span className="absolute left-4 top-2.5 text-slate-400">₹</span>
+              <span className="absolute left-4 top-2.5 text-slate-400">{settings.currencySymbol}</span>
               <input 
                 type="number"
                 step="0.01"

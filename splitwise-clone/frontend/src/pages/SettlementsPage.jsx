@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import useAuth from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
 import CardSkeleton from '../components/shared/CardSkeleton';
 import { Coins } from 'lucide-react';
 
 const SettlementsPage = () => {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const [settlements, setSettlements] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -95,7 +97,7 @@ const SettlementsPage = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="font-mono font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">
-                          ₹{parseFloat(s.amount).toFixed(2)}
+                          {settings.currencySymbol}{parseFloat(s.amount).toFixed(2)}
                         </span>
                       </td>
                     </tr>

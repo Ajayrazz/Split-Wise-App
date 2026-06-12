@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import useAuth from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
 import BalanceCard from '../components/balances/BalanceCard';
 import SettlementModal from '../components/settlements/SettlementModal';
 import CardSkeleton from '../components/shared/CardSkeleton';
@@ -8,6 +9,7 @@ import { Layers } from 'lucide-react';
 
 const BalancesPage = () => {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const [groupBalances, setGroupBalances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState({});
@@ -107,9 +109,9 @@ const BalancesPage = () => {
                   <div className="flex items-center space-x-6">
                     <div className="text-right">
                       <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Your Net</p>
-                      <p className={`font-mono font-medium ${groupNet > 0 ? 'text-emerald-400' : groupNet < 0 ? 'text-rose-400' : 'text-slate-300'}`}>
-                        {groupNet > 0 ? '+' : ''}₹{Math.abs(groupNet).toFixed(2)}
-                      </p>
+                      <div className={`font-mono font-medium ${groupNet > 0 ? 'text-emerald-400' : groupNet < 0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                        {groupNet > 0 ? '+' : ''}{settings.currencySymbol}{Math.abs(groupNet).toFixed(2)}
+                      </div>
                     </div>
                     <div className="text-slate-400 w-6 flex justify-center">
                       {isExpanded ? '▲' : '▼'}
