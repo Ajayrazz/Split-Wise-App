@@ -1,7 +1,15 @@
 # AI_CONTEXT.md — Splitwise Clone Living System Document
 **Version:** 1.0  
 **Last Updated:** 2026-06-12T10:29:00Z  
-**Phase:** 0 — Blueprint Complete
+**Phase:** 4 — Full-Stack Integration Complete
+
+### Project Phase Timeline
+1. [x] Phase 0: Project Blueprint & Documentation Genesis
+2. [x] Phase 1: Auth Engine & Database Hookup
+3. [x] Phase 2: Expense Engine, Splitting Math & Balances
+4. [x] Phase 3: WebSockets & Frontend Scaffold
+5. [x] Phase 4: Full-Stack Integration
+6. [ ] Phase 5: Polish & Deployment
 
 ## 1. PROJECT MISSION
 A simplified, production-grade Splitwise clone built as a full-stack web application. Core mechanics: group expense tracking, 4 split strategies with zero-sum mathematical guarantees, peer-to-peer balance ledgers, settlement logging, and real-time per-expense chat via WebSockets.
@@ -70,20 +78,43 @@ splitwise-clone/
 │       ├── components/
 │       │   ├── auth/
 │       │   ├── balances/
+│       │   │   └── BalanceCard.jsx
 │       │   ├── chat/
+│       │   │   └── ChatPanel.jsx
 │       │   ├── expenses/
+│       │   │   ├── AddExpenseModal.jsx
+│       │   │   ├── ExpenseTable.jsx
+│       │   │   ├── ExpenseTableRow.jsx
+│       │   │   ├── split-inputs/
+│       │   │   │   ├── EqualSplitView.jsx
+│       │   │   │   ├── PercentageSplitInput.jsx
+│       │   │   │   ├── ShareSplitInput.jsx
+│       │   │   │   └── UnequalSplitInput.jsx
+│       │   │   └── steps/
+│       │   │       ├── Step1_BasicInfo.jsx
+│       │   │       └── Step2_SplitAllocation.jsx
 │       │   ├── groups/
-│       │   └── layout/
-│       │       ├── AppLayout.jsx
-│       │       ├── Sidebar.jsx
-│       │       └── TopBanner.jsx
+│       │   ├── layout/
+│       │   │   ├── AppLayout.jsx
+│       │   │   ├── Sidebar.jsx
+│       │   │   └── TopBanner.jsx
+│       │   ├── settlements/
+│       │   │   └── SettlementModal.jsx
+│       │   └── shared/
+│       │       └── TableSkeleton.jsx
 │       ├── context/
 │       │   └── AuthContext.jsx
 │       ├── hooks/
 │       │   ├── useAuth.js
+│       │   ├── useExpenses.js
+│       │   ├── useSplitValidator.js
 │       │   └── useWebSocket.js
 │       └── pages/
-│           └── LoginPage.jsx
+│           ├── DashboardPage.jsx
+│           ├── ExpensesPage.jsx
+│           ├── GroupPage.jsx
+│           ├── LoginPage.jsx
+│           └── SettlementsPage.jsx
 ├── AI_CONTEXT.md              # THE LIVING SYSTEM DOCUMENT
 └── .gitignore                 # Git ignore patterns
 
@@ -237,8 +268,8 @@ Implemented in services/balances.py, called by the /api/v1/groups/<id>/balances/
 | Phase | Status | Completion Timestamp |
 |-------|--------|---------------------|
 | 0     | ✅ Complete | 2026-06-12T10:29:00Z |
-| 1     | ✅ Complete | 2026-06-12T10:40:00Z |
-| 2     | ✅ Complete | 2026-06-12T10:57:00Z |
+| 1     | ✅ Complete | 2026-06-12T13:00:00Z (Frontend Refactor) |
+| 2     | ✅ Complete | 2026-06-12T13:10:00Z |
 | 3     | ✅ Complete | 2026-06-12T11:12:00Z |
-| 4     | ⏳ Pending  |             |
+| 4     | ✅ Complete | 2026-06-12T12:00:00Z |
 | 5     | ⏳ Pending  |             |

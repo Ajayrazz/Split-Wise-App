@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import LoginForm from '../components/auth/LoginForm';
+import RegisterForm from '../components/auth/RegisterForm';
 import useAuth from '../hooks/useAuth';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) return null;
@@ -11,12 +11,12 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-slate-100 flex-col space-y-4">
-      <LoginForm />
+      <RegisterForm />
       <div className="text-sm text-slate-600">
-        Don't have an account? <Link to="/register" className="text-emerald-600 hover:underline">Register</Link>
+        Already have an account? <Link to="/login" className="text-emerald-600 hover:underline">Login</Link>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
