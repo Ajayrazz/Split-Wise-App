@@ -123,14 +123,24 @@ const BalancesPage = () => {
                       <p className="text-slate-400 text-center text-sm py-4">All settled up in this group!</p>
                     ) : (
                       <div className="space-y-3">
-                        {balances.map((b, idx) => (
-                          <BalanceCard 
-                            key={idx} 
-                            balance={b} 
-                            currentUserId={user?.id}
-                            onSettle={(data) => handleSettleClick(group.id, data)}
-                          />
-                        ))}
+                        {balances.map((b, idx) => {
+                          const user1Obj = group.members?.find(m => m.user_id === b.from_user_id) || { username: 'Unknown' };
+                          const user2Obj = group.members?.find(m => m.user_id === b.to_user_id) || { username: 'Unknown' };
+                          const enrichedBalance = {
+                            ...b,
+                            from_username: user1Obj.username,
+                            to_username: user2Obj.username
+                          };
+                          
+                          return (
+                            <BalanceCard 
+                              key={idx} 
+                              balance={enrichedBalance} 
+                              currentUserId={user?.id}
+                              onSettle={(data) => handleSettleClick(group.id, data)}
+                            />
+                          );
+                        })}
                       </div>
                     )}
                   </div>

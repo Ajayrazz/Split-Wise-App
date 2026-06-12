@@ -13,6 +13,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 import DashboardPage from './pages/DashboardPage';
+import GroupsIndexPage from './pages/GroupsIndexPage';
 import GroupPage from './pages/GroupPage';
 import ExpensesPage from './pages/ExpensesPage';
 import BalancesPage from './pages/BalancesPage';
@@ -38,7 +39,7 @@ const App = () => {
         </ProtectedRoute>
       }>
         <Route index element={<DashboardPage />} />
-        <Route path="groups" element={<DashboardPage />} />
+        <Route path="groups" element={<GroupsIndexPage />} />
         <Route path="groups/:id" element={<GroupPage />} />
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="balances" element={<BalancesPage />} />
