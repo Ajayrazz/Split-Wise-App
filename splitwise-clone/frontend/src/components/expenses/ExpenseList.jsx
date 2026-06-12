@@ -36,7 +36,7 @@ const ExpenseList = ({ groupId, members, onExpenseClick, activeExpenseId }) => {
             key={e.id} 
             expense={e} 
             isActive={activeExpenseId === e.id} 
-            onClick={() => onExpenseClick(e.id)} 
+            onClick={() => onExpenseClick(e)} 
           />
         ))}
         {expenses.length === 0 && <p className="text-sm text-slate-500">No expenses yet.</p>}

@@ -94,6 +94,8 @@ splitwise-clone/
 │       │   │       ├── Step1_BasicInfo.jsx
 │       │   │       └── Step2_SplitAllocation.jsx
 │       │   ├── groups/
+│       │   │   ├── CreateGroupModal.jsx
+│       │   │   └── GroupList.jsx
 │       │   ├── layout/
 │       │   │   ├── AppLayout.jsx
 │       │   │   ├── Sidebar.jsx
@@ -101,6 +103,9 @@ splitwise-clone/
 │       │   ├── settlements/
 │       │   │   └── SettlementModal.jsx
 │       │   └── shared/
+│       │       ├── CardSkeleton.jsx
+│       │       ├── ErrorBoundary.jsx
+│       │       ├── PlaceholderPage.jsx
 │       │       └── TableSkeleton.jsx
 │       ├── context/
 │       │   └── AuthContext.jsx
@@ -110,10 +115,18 @@ splitwise-clone/
 │       │   ├── useSplitValidator.js
 │       │   └── useWebSocket.js
 │       └── pages/
+│           ├── ActivityPage.jsx
+│           ├── AnalyticsPage.jsx
+│           ├── BalancesPage.jsx
 │           ├── DashboardPage.jsx
 │           ├── ExpensesPage.jsx
 │           ├── GroupPage.jsx
+│           ├── HelpPage.jsx
 │           ├── LoginPage.jsx
+│           ├── ProfilePage.jsx
+│           ├── RecentPage.jsx
+│           ├── RegisterPage.jsx
+│           ├── SettingsPage.jsx
 │           └── SettlementsPage.jsx
 ├── AI_CONTEXT.md              # THE LIVING SYSTEM DOCUMENT
 └── .gitignore                 # Git ignore patterns

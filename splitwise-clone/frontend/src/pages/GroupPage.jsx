@@ -3,14 +3,14 @@ import { useParams } from 'react-router-dom';
 import client from '../api/client';
 import ExpenseList from '../components/expenses/ExpenseList';
 import BalanceLedger from '../components/balances/BalanceLedger';
-
+import ChatPanel from '../components/chat/ChatPanel';
 import useAuth from '../hooks/useAuth';
 
 const GroupPage = () => {
   const { id } = useParams();
   const [group, setGroup] = useState(null);
   const [emailToInvite, setEmailToInvite] = useState('');
-  const [activeExpenseId, setActiveExpenseId] = useState(null);
+  const [activeChatExpense, setActiveChatExpense] = useState(null);
   const { user } = useAuth();
 
   const fetchGroup = async () => {
@@ -22,7 +22,7 @@ const GroupPage = () => {
 
   useEffect(() => {
     fetchGroup();
-    setActiveExpenseId(null);
+    setActiveChatExpense(null);
   }, [id]);
 
   const handleAddMember = async (e) => {
@@ -39,7 +39,7 @@ const GroupPage = () => {
   if (!group) return <div>Loading group...</div>;
 
   return (
-    <div className="flex h-full gap-6">
+    <div className={`flex h-full gap-6 transition-all duration-300 ${activeChatExpense ? 'mr-80' : ''}`}>
       {/* Left Panel: 60% */}
       <div className="flex-[3] flex flex-col min-h-0 bg-white border border-slate-200 rounded shadow-sm">
         <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
@@ -49,11 +49,11 @@ const GroupPage = () => {
           </div>
           <form onSubmit={handleAddMember} className="flex gap-2">
             <input 
-              type="email" 
-              placeholder="Invite user by email" 
+              type="text" 
+              placeholder="Invite user by email or username" 
               value={emailToInvite} 
               onChange={e=>setEmailToInvite(e.target.value)} 
-              className="rounded border border-slate-300 p-1 text-sm"
+              className="rounded border border-slate-300 p-1 text-sm w-48"
               required
             />
             <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Add</button>
@@ -63,24 +63,21 @@ const GroupPage = () => {
           <ExpenseList 
             groupId={id} 
             members={group.members} 
-            onExpenseClick={(eid) => setActiveExpenseId(eid)} 
-            activeExpenseId={activeExpenseId}
+            onExpenseClick={(expense) => setActiveChatExpense(expense)} 
+            activeExpenseId={activeChatExpense?.id}
           />
         </div>
       </div>
 
       {/* Right Panel: 40% */}
       <div className="flex-[2] flex flex-col min-h-0 bg-slate-50 border border-slate-200 rounded shadow-sm overflow-hidden">
-        {activeExpenseId ? (
-          <div className="p-8 text-center text-slate-500">
-            Chat functionality has been moved to the global Expenses tab!
-            <br/><br/>
-            <button onClick={() => setActiveExpenseId(null)} className="text-blue-500 hover:underline">Close</button>
-          </div>
-        ) : (
-          <BalanceLedger groupId={id} groupMembers={group.members} />
-        )}
+        <BalanceLedger groupId={id} groupMembers={group.members} />
       </div>
+
+      <ChatPanel 
+        expense={activeChatExpense} 
+        onClose={() => setActiveChatExpense(null)} 
+      />
     </div>
   );
 };
