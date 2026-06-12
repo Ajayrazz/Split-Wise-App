@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { setAccessToken } from '../api/client';
-import axios from 'axios';
+import client, { setAccessToken } from '../api/client';
 
 export const AuthContext = createContext();
 
@@ -12,14 +11,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/refresh/`, {}, { withCredentials: true });
+        const res = await client.post('/auth/refresh/', {}, { _retry: true });
         const token = res.data.access;
         setTokenState(token);
         setAccessToken(token);
         
-        const userRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const userRes = await client.get('/auth/me/');
         setUser(userRes.data);
       } catch (err) {
         setUser(null);
@@ -46,25 +43,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login/`, { email, password }, { withCredentials: true });
+    const res = await client.post('/auth/login/', { email, password });
     const token = res.data.access;
     setTokenState(token);
     setAccessToken(token);
     
-    const userRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/me/`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const userRes = await client.get('/auth/me/');
     setUser(userRes.data);
   };
 
   const register = async (username, email, password) => {
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/register/`, { username, email, password }, { withCredentials: true });
+    await client.post('/auth/register/', { username, email, password });
     await login(email, password);
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/logout/`, {}, { withCredentials: true });
+      await client.post('/auth/logout/');
     } catch(e) {}
     setUser(null);
     setTokenState(null);
