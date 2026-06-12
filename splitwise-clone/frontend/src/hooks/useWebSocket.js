@@ -11,7 +11,9 @@ export function useWebSocket(expenseId, accessToken) {
     if (!expenseId || !accessToken) return;
 
     setConnectionStatus('connecting');
-    const wsUrl = `${import.meta.env.VITE_WS_BASE_URL}/ws/chat/${expenseId}/?token=${accessToken}`;
+    const httpUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    const wsBaseUrl = httpUrl.replace(/^http/, 'ws');
+    const wsUrl = `${wsBaseUrl}/ws/chat/${expenseId}/?token=${accessToken}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
