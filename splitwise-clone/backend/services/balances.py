@@ -21,12 +21,13 @@ def compute_group_balances(group_id: int) -> list[dict]:
     """
     from apps.expenses.models import ExpenseSplit
     from apps.settlements.models import Settlement
+    from django.db.models import F, DecimalField
     
     # 1. Sum of expenses paid by user B where user A is the split user
     expense_aggregates = ExpenseSplit.objects.filter(
         expense__group_id=group_id
     ).values('user_id', 'expense__paid_by_id').annotate(
-        total_owed=Sum('amount_owed')
+        total_owed=Sum(F('amount_owed') * F('expense__exchange_rate'), output_field=DecimalField())
     )
     
     # 2. Sum of settlements paid by payer to payee

@@ -97,7 +97,7 @@ const ActivityPage = () => {
                       <span className={`px-2 py-0.5 rounded text-xs font-mono shrink-0 ${
                         item.type === 'expense' ? 'bg-blue-500/15 text-blue-300' : 'bg-emerald-500/15 text-emerald-300'
                       }`}>
-                        {settings.currencySymbol}{item.amount.toFixed(2)}
+                        {item.currencySymbol}{item.amount.toFixed(2)}
                       </span>
                     )}
                   </div>

@@ -33,7 +33,7 @@ const ExpenseCard = ({ expense, isActive, onClick }) => {
           <p className="text-xs text-slate-500">Paid by {expense.paid_by.username}</p>
         </div>
         <div className="text-right">
-          <div className="font-bold text-slate-800">{settings.currencySymbol}{expense.total_amount}</div>
+          <div className="font-bold text-slate-800">{expense.currency === 'USD' ? '$' : '₹'}{expense.total_amount}</div>
           <div className="text-xs text-slate-500">{new Date(expense.created_at).toLocaleDateString()}</div>
         </div>
       </div>

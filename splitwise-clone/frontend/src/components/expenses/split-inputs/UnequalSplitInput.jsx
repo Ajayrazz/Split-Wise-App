@@ -1,8 +1,7 @@
 import React from 'react';
 import { useSettings } from '../../../hooks/useSettings';
 
-const UnequalSplitInput = ({ groupMembers, splits, onSplitsChange }) => {
-  const { settings } = useSettings();
+const UnequalSplitInput = ({ groupMembers, splits, onSplitsChange, currencySymbol }) => {
   const handleChange = (userId, value) => {
     const updated = splits.map(s => s.user_id === userId ? { ...s, amount_owed: value } : s);
     onSplitsChange(updated);
@@ -16,7 +15,7 @@ const UnequalSplitInput = ({ groupMembers, splits, onSplitsChange }) => {
           <div key={m.user_id} className="flex justify-between items-center bg-slate-800 p-3 rounded border border-slate-700">
             <span className="text-slate-300 font-medium">{m.username}</span>
             <div className="relative w-32">
-              <span className="absolute left-3 top-1.5 text-slate-400">{settings.currencySymbol}</span>
+              <span className="absolute left-3 top-1.5 text-slate-400">{currencySymbol}</span>
               <input 
                 type="number"
                 step="0.01"

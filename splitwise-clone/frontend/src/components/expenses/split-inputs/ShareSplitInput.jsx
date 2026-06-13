@@ -1,8 +1,7 @@
 import React from 'react';
 import { useSettings } from '../../../hooks/useSettings';
 
-const ShareSplitInput = ({ groupMembers, splits, onSplitsChange, totalAmount }) => {
-  const { settings } = useSettings();
+const ShareSplitInput = ({ groupMembers, splits, onSplitsChange, totalAmount, currencySymbol }) => {
   const total = parseFloat(totalAmount) || 0;
   const totalShares = splits.reduce((acc, s) => acc + parseInt(s.shares || 0, 10), 0);
 
@@ -23,7 +22,7 @@ const ShareSplitInput = ({ groupMembers, splits, onSplitsChange, totalAmount }) 
           <div key={m.user_id} className="flex justify-between items-center bg-slate-800 p-3 rounded border border-slate-700">
             <div>
               <div className="text-slate-300 font-medium">{m.username}</div>
-              <div className="text-xs text-emerald-400/80 mt-0.5 font-mono">≈ {settings.currencySymbol}{computedAmt}</div>
+              <div className="text-xs text-emerald-400/80 mt-0.5 font-mono">≈ {currencySymbol}{computedAmt}</div>
             </div>
             <div className="flex items-center space-x-2">
               <button 

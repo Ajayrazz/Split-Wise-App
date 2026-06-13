@@ -175,6 +175,9 @@ DJANGO_CHANNEL_LAYERS_URL=redis://localhost:6379     # Redis URL for Channels la
 - group_id (ForeignKey to Group, CASCADE)
 - description (CharField)
 - total_amount (DecimalField)
+- currency (CharField, default='INR')
+- exchange_rate (DecimalField, default=1.00)
+- converted_amount (DecimalField, default=0.00)
 - paid_by (ForeignKey to User, CASCADE)
 - created_by (ForeignKey to User, CASCADE)
 - split_type (CharField)
@@ -380,3 +383,53 @@ Panel 2: Split type counts — count by split_type enum
 Panel 3: Monthly trend — group by created_at month, sum amounts
 Panel 4: Personal summary — filter by paid_by === currentUser.id
 
+## 18. PRODUCT UNDERSTANDING & SCOPE
+**Product Understanding:**
+A robust, financial ledger application that allows users to form groups, record shared expenses, and track complex peer-to-peer debts using multiple splitting strategies. The core value proposition is mathematical accuracy in zero-sum expense splitting combined with real-time communication.
+
+**Product Scope:**
+- **In Scope:** User authentication, Group management, 4 zero-sum split strategies (Equal, Unequal, Percentage, Shares), Settlement logging, Real-time WebSocket chat per expense, Client-side analytics, Client-side activity feed.
+- **Out of Scope:** Real money transfers (payment gateway integration), backend email delivery systems, push notifications.
+
+## 19. ENGINEERING REQUIREMENTS
+- **Zero-Sum Invariant:** All expense splits MUST sum exactly to the total expense amount.
+- **Floating Point Safety:** All currency math uses `Math.abs(amount) > 0.001` (epsilon) to prevent floating-point precision locking bugs.
+- **Backend Integrity:** The backend is 100% locked and strictly enforces zero-sum constraints, balance locks during member removal, and database uniqueness.
+
+## 20. IMPLEMENTATION DECISIONS & TRADE-OFFS
+- **Client-Side Analytics:** Instead of adding heavy SQL aggregation endpoints to the backend, all Analytics and Activity feeds are computed client-side by aggregating data from the existing `/groups/`, `/expenses/`, and `/settlements/` APIs. Trade-off: Higher client CPU usage and memory scaling linearly with group activity, but zero backend modifications required.
+- **External Email Invites:** Implemented via a native `mailto:` link on the client instead of a backend `pending_invite` table and SMTP server. Trade-off: Relies on user's local email client, but satisfies the locked-backend constraint.
+- **WebSockets IPv6 Fallback:** Chrome DevTools often forces `localhost` to resolve to IPv6 (`::1`), breaking Daphne's IPv4 `127.0.0.1` binding. We hardcoded `127.0.0.1` in the Vite proxy and frontend WebSocket hook to guarantee stability.
+
+## 21. DEPLOYMENT PLAN
+**Backend:** Render.com
+- Daphne ASGI server handling both HTTP and WebSockets.
+- Django Channels backed by Redis.
+- PostgreSQL database hosted on Supabase.
+
+**Frontend:** Vercel
+- React 18 + Vite SPA deployment.
+- Environment variables configured to point to Render backend (`VITE_API_BASE_URL` and `VITE_WS_BASE_URL`).
+
+## 22. TESTING PLAN
+- **Automated Backend Tests:** `test_splitting.py` guarantees the 4 math strategies hold the zero-sum invariant. `test_balances.py` guarantees ledger accuracy after expenses and settlements.
+- **Manual UI Testing:** 
+  1. Verify zero-sum enforcement visually in AddExpenseModal.
+  2. Verify WebSocket connection state (green `CONNECTED` badge) and cross-browser real-time sync.
+  3. Verify member removal blocking (409 Conflict / Client-side lock) when balances exist.
+  4. Verify the `mailto:` fallback for external invites.
+
+## 23. PROMPTS & AI RESPONSES (CHANGELOG)
+- **Phase A:** "TopBanner Global Metrics & Reactive State" — Fixed global balance context to reactively re-fetch on trigger.
+- **Phase B:** "Analytics & Activity Data-Backed Views" — Transformed placeholder pages into pure JS aggregation engines.
+- **Phase C:** "Profile & Settings" — Built out settings toggles and user profile display.
+- **Bug Fixes & Refactors:**
+  - *WebSocket Bug:* Diagnosed and fixed the `localhost` IPv6 resolution crash by overriding environment variables to explicitly use `127.0.0.1`.
+  - *Invite System Bug:* Fixed the ID mapping where `member.id` (GroupMember relational ID) was incorrectly passed to the backend instead of `member.user_id`.
+  - *Search API Fallback:* Removed the fake `/users/?search=` endpoint invocation to allow existing users to be added instantly via POST, transitioning to `mailto:` only on 404.
+  - *JSX Syntax Error:* Fixed an accidental JSX destructuring bug caused during the InviteMemberPanel refactor.
+
+## 24. KNOWN LIMITATIONS
+- **Scale:** Client-side aggregation for Activity/Analytics will slow down if a user has thousands of expenses, as there is currently no pagination implemented on the frontend for those derived views.
+- **Invitations:** Cannot track pending invitation status within the app since it relies on native `mailto:` links.
+- **Profile Avatars:** Fallback to UI-generated initial avatars as image uploading/S3 storage is not implemented.

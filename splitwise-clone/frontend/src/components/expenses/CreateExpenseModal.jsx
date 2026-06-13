@@ -9,8 +9,11 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
+  const [currency, setCurrency] = useState('INR');
   const [paidBy, setPaidBy] = useState(user?.id || '');
   const [splitType, setSplitType] = useState('EQUAL');
+
+  const currencySymbol = currency === 'USD' ? '$' : '₹';
 
   const [splits, setSplits] = useState({});
 
@@ -51,6 +54,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
     const payload = {
       description,
       total_amount: totalAmount,
+      currency,
       paid_by_id: paidBy,
       split_type: splitType,
     };
@@ -87,7 +91,16 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700">Total Amount</label>
-              <input type="number" step="0.01" required value={totalAmount} onChange={e=>setTotalAmount(e.target.value)} className="mt-1 block w-full rounded border p-2" />
+              <div className="flex gap-2 items-start mt-1">
+                <select value={currency} onChange={e=>setCurrency(e.target.value)} className="block rounded border p-2 bg-slate-50">
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                </select>
+                <div className="w-full">
+                  <input type="number" step="0.01" required value={totalAmount} onChange={e=>setTotalAmount(e.target.value)} className="block w-full rounded border p-2" />
+                  {currency === 'USD' && <div className="text-xs text-slate-500 mt-1">≈ ₹95 per $1</div>}
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700">Paid By</label>
@@ -115,7 +128,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
         {step === 2 && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="text-sm text-slate-600 mb-2">
-              Splitting {settings.currencySymbol}{totalAmount} as {splitType}
+              Splitting {currencySymbol}{totalAmount} as {splitType}
             </div>
             
             <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -123,7 +136,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
                 <div key={m.user_id} className="flex justify-between items-center">
                   <span className="text-sm font-medium text-slate-700">{m.username}</span>
                   {splitType === 'EQUAL' ? (
-                    <span className="text-sm">{settings.currencySymbol}{splits[m.user_id]?.toFixed(2)}</span>
+                    <span className="text-sm">{currencySymbol}{splits[m.user_id]?.toFixed(2)}</span>
                   ) : (
                     <input 
                       type="number" step="0.01" required
@@ -142,7 +155,7 @@ const CreateExpenseModal = ({ groupId, members, onClose, onSuccess }) => {
                 (splitType === 'PERCENTAGE' && currentSum !== 100) 
                 ? 'text-rose-600' : 'text-emerald-600'
               }`}>
-                Total: {currentSum.toFixed(2)} {splitType === 'PERCENTAGE' ? '%' : (splitType === 'SHARE' ? 'shares' : settings.currencySymbol)}
+                Total: {currentSum.toFixed(2)} {splitType === 'PERCENTAGE' ? '%' : (splitType === 'SHARE' ? 'shares' : currencySymbol)}
               </div>
             )}
 

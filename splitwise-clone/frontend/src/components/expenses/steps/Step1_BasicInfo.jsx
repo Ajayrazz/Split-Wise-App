@@ -55,16 +55,29 @@ const Step1_BasicInfo = ({ formData, setFormData, onNext }) => {
 
       <div>
         <label className="block text-sm font-medium text-slate-400 mb-1">Total Amount</label>
-        <div className="relative">
-          <span className="absolute left-4 top-2.5 text-slate-400">{settings.currencySymbol}</span>
-          <input 
-            type="number" 
-            step="0.01" 
-            min="0.01"
-            value={formData.totalAmount}
-            onChange={e => setFormData({ ...formData, totalAmount: e.target.value })}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-8 pr-4 py-2 text-white focus:outline-none focus:border-emerald-500"
-          />
+        <div className="flex gap-2 items-start mt-1">
+          <select 
+            value={formData.currency} 
+            onChange={e => setFormData({ ...formData, currency: e.target.value })}
+            className="block rounded-lg border border-slate-600 px-4 py-2 bg-slate-700 text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="INR">INR (₹)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+          <div className="w-full relative">
+            <span className="absolute left-4 top-2.5 text-slate-400">
+              {formData.currency === 'USD' ? '$' : '₹'}
+            </span>
+            <input 
+              type="number" 
+              step="0.01" 
+              min="0.01"
+              value={formData.totalAmount}
+              onChange={e => setFormData({ ...formData, totalAmount: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-8 pr-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+            />
+            {formData.currency === 'USD' && <div className="text-xs text-slate-400 mt-1">≈ ₹95 per $1</div>}
+          </div>
         </div>
       </div>
 

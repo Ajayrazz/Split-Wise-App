@@ -18,6 +18,7 @@ const AddExpenseModal = ({ onClose, onExpenseCreated }) => {
     totalAmount: '',
     paidById: '',
     splitType: 'EQUAL',
+    currency: 'INR',
     groupMembers: [],
     splits: []
   });
@@ -43,6 +44,7 @@ const AddExpenseModal = ({ onClose, onExpenseCreated }) => {
       groupId: formData.groupId,
       description: formData.description,
       total_amount: formData.totalAmount,
+      currency: formData.currency,
       paid_by_id: formData.paidById,
       split_type: formData.splitType,
       splits: formattedSplits

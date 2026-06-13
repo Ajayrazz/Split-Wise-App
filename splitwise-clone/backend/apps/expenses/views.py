@@ -32,11 +32,15 @@ class ExpenseListView(views.APIView):
             
         splits_data = request.data.get('splits', [])
         split_type = request.data.get('split_type')
+        currency = request.data.get('currency', 'INR')
+        
         try:
             total_amount = Decimal(str(request.data.get('total_amount')))
+            exchange_rate = Decimal('95.00') if currency == 'USD' else Decimal('1.00')
+            converted_amount = total_amount * exchange_rate
         except Exception:
             return Response({"error": "Invalid total_amount"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         user_ids = [s.get('user_id') for s in splits_data if 'user_id' in s]
         members_count = GroupMember.objects.filter(group=group, user_id__in=user_ids).count()
         if members_count != len(set(user_ids)):
@@ -66,6 +70,9 @@ class ExpenseListView(views.APIView):
                 group=group,
                 description=request.data.get('description'),
                 total_amount=total_amount,
+                currency=currency,
+                exchange_rate=exchange_rate,
+                converted_amount=converted_amount,
                 paid_by_id=paid_by_id,
                 split_type=split_type
             )

@@ -66,7 +66,7 @@ const RecentPage = () => {
                 {/* RIGHT */}
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-emerald-400 font-mono font-semibold text-base">
-                    {settings.currencySymbol}{item.amount.toFixed(2)}
+                    {item.currencySymbol}{item.amount.toFixed(2)}
                   </span>
                   <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
                     item.meta.split_type === 'EQUAL' ? 'bg-emerald-500/20 text-emerald-400' :

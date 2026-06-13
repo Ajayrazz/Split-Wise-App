@@ -40,6 +40,7 @@ export function useActivityFeed() {
           const expRes = await client.get(`/groups/${group.id}/expenses/`);
           const expenses = expRes.data.map(exp => {
             const actor = exp.paid_by === user.id ? 'You' : (group.members?.find(m => m.user_id === exp.paid_by)?.username || 'Someone');
+            const currencySymbol = exp.currency === 'USD' ? '$' : '₹';
             return {
               id: `expense-${exp.id}`,
               type: 'expense',
@@ -47,8 +48,9 @@ export function useActivityFeed() {
               groupId: group.id,
               groupName: group.name,
               actor: actor,
-              description: `${actor} paid ${settings.currencySymbol}${parseFloat(exp.total_amount).toFixed(2)} for ${exp.description} in ${group.name}`,
+              description: `${actor} paid ${currencySymbol}${parseFloat(exp.total_amount).toFixed(2)} for ${exp.description} in ${group.name}`,
               amount: parseFloat(exp.total_amount),
+              currencySymbol: currencySymbol,
               meta: exp
             };
           });
@@ -66,6 +68,7 @@ export function useActivityFeed() {
               actor: payer,
               description: `${payer} settled ${settings.currencySymbol}${parseFloat(settle.amount).toFixed(2)} with ${payee} in ${group.name}`,
               amount: parseFloat(settle.amount),
+              currencySymbol: settings.currencySymbol,
               meta: settle
             };
           });

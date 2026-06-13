@@ -8,7 +8,8 @@ import { useSettings } from '../../../hooks/useSettings';
 
 const Step2_SplitAllocation = ({ formData, setFormData, onSubmit, isSubmitting, onBack }) => {
   const { settings } = useSettings();
-  const { groupMembers, splitType, totalAmount, splits } = formData;
+  const { groupMembers, splitType, totalAmount, splits, currency } = formData;
+  const currencySymbol = currency === 'USD' ? '$' : '₹';
 
   useEffect(() => {
     if (splits.length === 0 && groupMembers.length > 0) {
@@ -31,13 +32,13 @@ const Step2_SplitAllocation = ({ formData, setFormData, onSubmit, isSubmitting, 
   const renderSplitComponent = () => {
     switch (splitType) {
       case 'EQUAL':
-        return <EqualSplitView groupMembers={groupMembers} totalAmount={totalAmount} />;
+        return <EqualSplitView groupMembers={groupMembers} totalAmount={totalAmount} currencySymbol={currencySymbol} />;
       case 'UNEQUAL':
-        return <UnequalSplitInput groupMembers={groupMembers} splits={splits} onSplitsChange={handleSplitsChange} />;
+        return <UnequalSplitInput groupMembers={groupMembers} splits={splits} onSplitsChange={handleSplitsChange} currencySymbol={currencySymbol} />;
       case 'PERCENTAGE':
         return <PercentageSplitInput groupMembers={groupMembers} splits={splits} onSplitsChange={handleSplitsChange} />;
       case 'SHARE':
-        return <ShareSplitInput groupMembers={groupMembers} splits={splits} onSplitsChange={handleSplitsChange} totalAmount={totalAmount} />;
+        return <ShareSplitInput groupMembers={groupMembers} splits={splits} onSplitsChange={handleSplitsChange} totalAmount={totalAmount} currencySymbol={currencySymbol} />;
       default:
         return null;
     }
@@ -48,7 +49,7 @@ const Step2_SplitAllocation = ({ formData, setFormData, onSubmit, isSubmitting, 
       <div className="bg-slate-700/30 p-4 rounded-lg flex justify-between items-center border border-slate-700/50">
         <div>
           <p className="text-sm text-slate-400">Total Amount</p>
-          <p className="text-xl font-bold text-emerald-400 font-mono">{settings.currencySymbol}{parseFloat(totalAmount || 0).toFixed(2)}</p>
+          <p className="text-xl font-bold text-emerald-400 font-mono">{currencySymbol}{parseFloat(totalAmount || 0).toFixed(2)}</p>
         </div>
         <div className="text-right">
           <p className="text-sm text-slate-400">Split By</p>

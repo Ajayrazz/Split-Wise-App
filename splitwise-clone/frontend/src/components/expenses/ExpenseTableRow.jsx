@@ -32,7 +32,7 @@ const ExpenseTableRow = ({ expense, onClick }) => {
       </td>
       <td className="px-6 py-4 text-left text-slate-400">{formattedDate}</td>
       <td className="px-6 py-4 text-right font-mono font-semibold text-emerald-400">
-        {settings.currencySymbol}{parseFloat(expense.total_amount).toFixed(2)}
+        {expense.currency === 'USD' ? '$' : '₹'}{parseFloat(expense.total_amount).toFixed(2)}
       </td>
     </tr>
   );
