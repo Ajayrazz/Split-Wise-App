@@ -36,7 +36,7 @@ const ChatPanel = ({ expense, onClose }) => {
         <div>
           <h2 className="font-semibold text-white truncate max-w-[200px]">{expense.description}</h2>
           <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono font-medium mt-1 inline-block">
-            {settings.currencySymbol}{parseFloat(expense.total_amount).toFixed(2)}
+            {expense.currency === 'USD' ? '$' : '₹'}{parseFloat(expense.total_amount).toFixed(2)}
           </span>
         </div>
         <button onClick={onClose} className="text-slate-400 hover:text-white p-1">✕</button>
