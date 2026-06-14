@@ -73,7 +73,7 @@ const MemberRoster = ({ groupId, currentUserId }) => {
         </div>
       </div>
 
-      <div className="divide-y divide-slate-700/50">
+      <div className="divide-y divide-slate-700/50 max-h-80 overflow-y-auto">
         {members.map(member => (
           <React.Fragment key={member.id}>
             <div className="px-5 py-4 flex items-center gap-4 hover:bg-slate-700/20 transition-colors">

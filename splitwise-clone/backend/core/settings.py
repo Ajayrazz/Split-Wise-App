@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='unsafe-secret-key')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='')
+ALLOWED_HOSTS = ['testserver'] + config('ALLOWED_HOSTS', cast=Csv(), default='')
 
 INSTALLED_APPS = [
     'daphne',
@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'apps.expenses',
     'apps.settlements',
     'apps.chat',
+    'apps.importer',
 ]
 
 MIDDLEWARE = [

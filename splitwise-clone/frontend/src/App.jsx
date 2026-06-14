@@ -24,6 +24,7 @@ import RecentPage from './pages/RecentPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
+import ImportPage from './pages/ImportPage';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { GlobalBalanceProvider } from './context/GlobalBalanceContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -56,6 +57,7 @@ const App = () => {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="help" element={<HelpPage />} />
+        <Route path="import" element={<ImportPage />} />
       </Route>
     </Routes>
   );

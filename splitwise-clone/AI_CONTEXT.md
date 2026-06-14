@@ -52,7 +52,20 @@ splitwise-clone/
 │   │   ├── groups/            # Groups & membership app
 │   │   ├── expenses/          # Expenses & splits app
 │   │   ├── settlements/       # Settlement ledger app
-│   │   └── chat/              # WebSocket chat app
+│   │   ├── chat/              # WebSocket chat app
+│   │   └── importer/          # [CREATE]
+│   │       ├── __init__.py
+│   │       ├── apps.py
+│   │       ├── constants.py
+│   │       ├── migrations/
+│   │       ├── models.py
+│   │       ├── services/
+│   │       │   ├── executor.py
+│   │       │   ├── parser.py
+│   │       │   └── validator.py
+│   │       ├── tests.py       # [CREATE]
+│   │       ├── urls.py
+│   │       └── views.py
 │   ├── services/
 │   │   ├── splitting.py       # Math engine for zero-sum splits
 │   │   └── balances.py        # Balance computation engine
@@ -110,6 +123,11 @@ splitwise-clone/
 │       │       ├── PlaceholderPage.jsx
 │       │       ├── TableSkeleton.jsx
 │       │       └── Toast.jsx
+│       │   ├── importer/              # [CREATE]
+│       │   │   ├── AnomalyRow.jsx
+│       │   │   ├── DropZone.jsx
+│       │   │   ├── StagingReport.jsx
+│       │   │   └── SummaryBar.jsx
 │       ├── context/
 │       │   ├── AuthContext.jsx
 │       │   └── GlobalBalanceContext.jsx   # [CREATE]
@@ -120,7 +138,8 @@ splitwise-clone/
 │       │   ├── useGroupMembers.js
 │       │   ├── useSplitValidator.js
 │       │   ├── useToast.js
-│       │   └── useWebSocket.js
+│       │   ├── useWebSocket.js
+│       │   └── useImport.js           # [CREATE]
 │       └── pages/
 │           ├── ActivityPage.jsx       # [MODIFY]
 │           ├── AnalyticsPage.jsx      # [MODIFY]
@@ -129,6 +148,7 @@ splitwise-clone/
 │           ├── ExpensesPage.jsx
 │           ├── GroupPage.jsx
 │           ├── HelpPage.jsx
+│           ├── ImportPage.jsx         # [CREATE]
 │           ├── LoginPage.jsx
 │           ├── ProfilePage.jsx
 │           ├── RecentPage.jsx         # [MODIFY]
@@ -136,6 +156,9 @@ splitwise-clone/
 │           ├── SettingsPage.jsx
 │           └── SettlementsPage.jsx
 ├── AI_CONTEXT.md              # THE LIVING SYSTEM DOCUMENT
+├── AI_USAGE.md                # [CREATE]
+├── DECISIONS.md               # [CREATE]
+├── SCOPE.md                   # [CREATE]
 └── .gitignore                 # Git ignore patterns
 
 ## 5. ENVIRONMENT VARIABLES
@@ -230,6 +253,10 @@ POST    /api/v1/groups/<id>/settlements/ —  Create a settlement        —  Au
 GET     /api/v1/groups/<id>/balances/    —  Get peer-to-peer balances  —  Auth Required: Yes ✅ IMPLEMENTED
 GET     /api/v1/expenses/<id>/chat/      —  Get chat history           —  Auth Required: Yes ✅ IMPLEMENTED
 
+POST    /api/v1/importer/upload/         —  Upload CSV for validation  —  Auth Required: Yes ✅ IMPLEMENTED
+PATCH   /api/v1/importer/rows/<id>/      —  Approve/Exclude row        —  Auth Required: Yes ✅ IMPLEMENTED
+POST    /api/v1/importer/<batch>/confirm/—  Confirm ingestion          —  Auth Required: Yes ✅ IMPLEMENTED
+
 ## 8. WEBSOCKET PROTOCOL
 - Connection URL pattern: ws://<host>/ws/chat/<expense_id>/
 - Auth: JWT passed as query parameter ?token=<access_token>
@@ -293,7 +320,7 @@ Implemented in services/balances.py, called by the /api/v1/groups/<id>/balances/
 | 0     | ✅ Complete | 2026-06-12T10:29:00Z |
 | 1     | ✅ Complete | 2026-06-12T13:00:00Z (Frontend Refactor) |
 | 2     | ✅ Complete | 2026-06-12T13:10:00Z |
-| 3     | ✅ Complete | 2026-06-12T11:12:00Z |
+| 3     | ✅ Complete | 2026-06-14T02:00:00Z |
 | 4     | ✅ Complete | 2026-06-12T12:00:00Z |
 | 5     | ⏳ Pending  |             |
 | Phase A | ✅ Complete | 2026-06-13T00:54:00Z |

@@ -25,11 +25,11 @@ client.credentials(HTTP_AUTHORIZATION='Bearer ' + token_a)
 print("CHECK 2: Create group and add members")
 res_group = client.post('/api/v1/groups/', {"name": "Test Group 2"})
 group_id = res_group.data['id']
-client.post(f'/api/v1/groups/{group_id}/members/', {"email": "bob2@example.com"})
-client.post(f'/api/v1/groups/{group_id}/members/', {"email": "charlie2@example.com"})
+client.post(f'/api/v1/groups/{group_id}/members/', {"user": "bob2@example.com"})
+client.post(f'/api/v1/groups/{group_id}/members/', {"user": "charlie2@example.com"})
 
 group_data = client.get(f'/api/v1/groups/{group_id}/').data
-u_ids = {m['user']['username']: m['user']['id'] for m in group_data['members']}
+u_ids = {m['username']: m['user_id'] for m in group_data['members']}
 print("Group members:", list(u_ids.keys()))
 
 print("CHECK 3: Create EQUAL expense")

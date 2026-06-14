@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Users, Receipt, Scale, Coins, Bell, BarChart2, Clock, 
-  Plus, PlusSquare, User, Settings, HelpCircle, LogOut 
+  Plus, PlusSquare, User, Settings, HelpCircle, LogOut, Upload
 } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import CreateGroupModal from '../groups/CreateGroupModal';
@@ -93,6 +93,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             >
               <PlusSquare size={18} /> Add Expense
             </button>
+            <Link to="/import" onClick={onClose} className={getNavLinkClass('/import')}>
+              <Upload size={18} className={getIconClass('/import')} /> Import CSV
+            </Link>
           </nav>
         </div>
 

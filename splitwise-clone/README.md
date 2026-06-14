@@ -93,3 +93,24 @@ npm run dev
 ```
 
 The frontend runs on `http://localhost:5173` and communicates with the backend on `http://localhost:8000`.
+
+## How to Import expenses_export.csv
+
+1. Log in → click "Import CSV" in sidebar
+2. Select target group from dropdown
+3. Drop expenses_export.csv onto the upload area
+4. Click "Validate CSV" — all 42 rows parsed and validated
+5. Review the Data Conflict & Import Report:
+   - Emerald rows = clean, ready to approve
+   - Amber rows = warnings (auto-cleaned), review and approve
+   - Red rows = rejected (missing payer, invalid date, etc.)
+   - Purple rows = conflicting duplicates, require your decision
+   - Grey rows = exact duplicates, automatically skipped
+6. Click any row to expand full issue details and policy explanation
+7. Click "✓ Approve Normalisation" on rows you want to import
+8. Click "Approve All Valid" to bulk-approve all non-flagged rows
+9. Click "Confirm Ingestion (N rows)" to write to the live database
+10. Download the import report for audit purposes
+
+## AI Tools Used
+Claude (Anthropic) — see AI_USAGE.md for full log.
