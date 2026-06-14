@@ -5,15 +5,15 @@ This document captures the critical architectural, infrastructure, and product d
 ---
 
 ## ADR 001: Abstracting Business Logic into a Service Layer
-**Date:** 2026-06-11  
+**Date:** 2026-06-12  
 **Status:** Approved & Implemented  
 
 **Context:** Django applications traditionally put business logic in Views or Models (`fat models, skinny views`). However, expense splitting and ledger balancing require strict mathematical guarantees and are invoked from multiple places (REST API, WebSocket actions, CSV Importer).  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Keep logic in DRF Serializers.
 2. Put logic in Django Models using `save()` overrides.  
 **Final Decision:** Extract all core math and validation into a distinct `/services/` directory (e.g., `services/splitting.py`, `services/validator.py`).  
-**Why we chose it:** Promotes DRY (Don't Repeat Yourself) principles. Allows the CSV Importer to invoke the exact same zero-sum math engine as the REST API without making internal HTTP requests, guaranteeing atomic database transactions.  
+**Rationale:** Promotes DRY (Don't Repeat Yourself) principles. Allows the CSV Importer to invoke the exact same zero-sum math engine as the REST API without making internal HTTP requests, guaranteeing atomic database transactions.  
 **Trade-offs:** Adds slight overhead to the folder structure and requires developers to understand the abstraction.  
 **Risks:** If developers bypass the service layer and write to models directly, the zero-sum invariant could be violated.  
 **Impacted Systems:** Backend API, Importer Engine.  
@@ -26,11 +26,11 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** The application features an "Analytics" and "Recent Activity" dashboard. We needed to decide where the aggregation (summing totals, merging timelines) should occur.  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Create complex SQL `GROUP BY` endpoints in Django.
 2. Calculate everything on the React frontend using existing generic endpoints.  
 **Final Decision:** Utilize Client-Side Aggregation (Alternative 2).  
-**Why we chose it:** Keeps the backend API thin and generic. React's state management is highly capable of sorting and reducing arrays of a few thousand objects instantly.  
+**Rationale:** Keeps the backend API thin and generic. React's state management is highly capable of sorting and reducing arrays of a few thousand objects instantly.  
 **Trade-offs:** Moves compute load to the user's browser. Will not scale infinitely.  
 **Risks:** A user with 10,000+ expenses may experience noticeable UI lag or browser memory bloat due to the lack of server-side pagination.  
 **Impacted Systems:** React Frontend (`useActivityFeed.js`).  
@@ -43,11 +43,11 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** Production requires a robust database (PostgreSQL 15 via Supabase), but forcing developers to run Dockerized Postgres locally creates onboarding friction.  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Force Postgres usage via Docker Compose for all environments.
 2. Use `dj_database_url` to fallback to SQLite if `DATABASE_URL` is omitted.  
 **Final Decision:** Implement the `dj_database_url` fallback to SQLite3 (Alternative 2).  
-**Why we chose it:** Maximizes developer velocity. New contributors can run the app immediately using just a Python virtual environment.  
+**Rationale:** Maximizes developer velocity. New contributors can run the app immediately using just a Python virtual environment.  
 **Trade-offs:** Risk of environment disparity (e.g., SQLite does not enforce strict data types like Postgres does for `JSONField`).  
 **Risks:** A bug might only appear in production if it relies on Postgres-specific SQL syntax.  
 **Impacted Systems:** Backend configurations (`settings.py`), Database Migrations.  
@@ -60,11 +60,11 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** Users need to import financial data via CSV. Data is often messy (missing names, conflicting duplicates). The system must never silently guess financial data.  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Auto-ingest everything and flag errors in the UI later.
 2. Two-step staging process: Upload -> Preview & Validate -> Confirm.  
 **Final Decision:** Use the two-step staging process (Alternative 2).  
-**Why we chose it:** Financial ledgers demand high auditability. By holding parsed data in a `StagedExpense` table and forcing human review for things like `CONFLICTING_DUPLICATE`, we protect the ledger's integrity.  
+**Rationale:** Financial ledgers demand high auditability. By holding parsed data in a `StagedExpense` table and forcing human review for things like `CONFLICTING_DUPLICATE`, we protect the ledger's integrity.  
 **Trade-offs:** Heavier initial database writes (writing to a staging table, then rewriting to the live table).  
 **Risks:** Staged data can bloat the database if users abandon imports halfway through.  
 **Impacted Systems:** Backend Importer App, React Frontend hooks (`useImport.js`).  
@@ -77,11 +77,11 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** Users cannot be removed from a group if they have an outstanding balance. In JS, `0.1 + 0.2 !== 0.3`.  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Strict equality `balance === 0`.
 2. Epsilon checking `Math.abs(balance) > 0.001`.  
 **Final Decision:** Use Epsilon checking (Alternative 2).  
-**Why we chose it:** Standard computing practice for float comparisons. Prevents users from being permanently locked in a group due to a $0.0000000001 precision artifact.  
+**Rationale:** Standard computing practice for float comparisons. Prevents users from being permanently locked in a group due to a $0.0000000001 precision artifact.  
 **Trade-offs:** Slightly more verbose code.  
 **Risks:** None, as currency operations generally only require 2 decimal precision.  
 **Impacted Systems:** React Frontend (`useGroupMembers.js`).  
@@ -94,11 +94,11 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** The application requires real-time per-expense chat.  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Integrate Firebase Realtime Database / Socket.io microservice.
 2. Keep the stack unified using Django Channels + Daphne.  
 **Final Decision:** Use Django Channels (Alternative 2).  
-**Why we chose it:** Allows the chat system to natively leverage Django's ORM and existing JWT authentication. Reduces the number of cloud services required.  
+**Rationale:** Allows the chat system to natively leverage Django's ORM and existing JWT authentication. Reduces the number of cloud services required.  
 **Trade-offs:** Requires running an ASGI server (`daphne`) rather than standard WSGI (`gunicorn`), making deployment slightly more complex. Requires Redis.  
 **Risks:** Chrome DevTools IPv6 resolution issues caused local Daphne binding crashes. Hardcoded `127.0.0.1` mitigations were required.  
 **Impacted Systems:** Backend Infrastructure, Frontend API calls.  
@@ -111,12 +111,12 @@ This document captures the critical architectural, infrastructure, and product d
 **Status:** Approved & Implemented  
 
 **Context:** The CSV Importer frequently encounters negative amounts (representing refunds or bank reversals).  
-**Options Considered:** 
+**Alternatives Considered:** 
 1. Reject the row outright.
 2. Convert to an absolute value and log as an Expense.
 3. Convert to absolute value and log as a `Settlement` (refund).  
 **Final Decision:** Convert to absolute value and log as a Settlement (Alternative 3).  
-**Why we chose it:** Reversing an expense mathematically is identical to a settlement payout. This preserves ledger accuracy without confusing the zero-sum engine.  
+**Rationale:** Reversing an expense mathematically is identical to a settlement payout. This preserves ledger accuracy without confusing the zero-sum engine.  
 **Trade-offs:** Slightly obscures the semantic difference between a "refund" and a "settlement" in the database.  
 **Risks:** None identified.  
 **Impacted Systems:** Importer Validator Service.  
