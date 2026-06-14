@@ -1,116 +1,194 @@
 # Splitwise Clone 🚀
 
-A full-stack, modern, and beautiful web application inspired by Splitwise. This app helps you effortlessly track shared expenses, calculate net balances, and settle debts with friends, family, and housemates. It features a stunning 3D glassmorphism UI, real-time expense chat, and robust group management.
+A full-stack, modern, and beautiful web application engineered to seamlessly track shared expenses, calculate net balances, and settle debts. Featuring a stunning 3D glassmorphism UI, mathematically rigorous zero-sum splitting engines, bulk CSV ingestion, and real-time WebSockets communication.
 
 ---
 
-## 🎯 What is it?
-This project is a complete reimplementation of the core features of Splitwise. It solves the awkwardness and complexity of shared finances. Whether you're planning a trip with friends, managing household bills with roommates, or tracking dinner debts, this app tracks *who owes whom* and calculates the most efficient way to settle up.
+## 📖 Project Overview
+This project is an advanced reimplementation of the core features of Splitwise. It tracks *who owes whom* and calculates the most mathematically efficient way to settle group debts. Whether you're managing apartment utility bills or a multi-currency group vacation, this app eliminates the friction of shared finances.
 
-## 💡 How is it helpful?
-- **Simplifies Math:** No more spreadsheets. Just enter the total cost and who paid, and the app calculates the exact debts automatically.
-- **Reduces Awkwardness:** Keep a transparent ledger of debts so you never have to remind people to pay you back manually.
-- **Contextual Communication:** Discuss specific expenses directly in real-time using the built-in expense chat feature.
-- **Centralized Tracking:** Manage all your different groups (Trips, Apartment, Couples) in one unified dashboard.
-
----
-
-## ✨ Features Added
-
-### 1. Modern Auth & Dashboard
-- **JWT Authentication:** Secure login and registration using JSON Web Tokens.
-- **3D Glassmorphism UI:** A stunning, premium aesthetic on the Auth pages featuring floating geometric animations, frosted glass panels, and glowing focus states.
-- **Landing Dashboard:** A beautiful, responsive home dashboard giving you quick access to all your groups, balances, and expenses.
-
-### 2. Group Management
-- Create custom groups for different scenarios (e.g., "Goa Trip", "LPU Students").
-- Dynamically add members to groups via their registered username or email.
-
-### 3. Expense Tracking & Splitting
-- Add expenses to specific groups.
-- Supports both **EQUAL** (split evenly among everyone) and **EXACT** (custom amounts per person) split types.
-- A dedicated Expenses tab with detailed, searchable data tables.
-
-### 4. Advanced Balance Calculation
-- **Global Ledger:** View your total net balances across *all* groups at once.
-- **Group-Specific Ledger:** See exactly who owes who within a specific group.
-- The backend automatically calculates the most efficient debt paths (A owes B, B owes C -> simplifies debts).
-
-### 5. Settlements
-- Easily "Settle Up" when someone pays you back in cash or via a third-party app.
-- Settle specific amounts, automatically adjusting the live debt ledger.
-
-### 6. 💬 Real-Time Expense Chat
-- Every single expense comes with a dedicated **Real-Time Chat Room**.
-- Powered by **WebSockets**, allowing users to discuss an expense (e.g., "Why was the dinner bill so high?", "I ordered the extra fries!") instantly without refreshing the page.
-- Beautiful slide-out drawer UI for the chat panel that doesn't obstruct the main view.
+### 🎯 Key Capabilities
+- **Advanced Expense Splitting:** Supports EQUAL, EXACT, PERCENTAGE, and SHARES splitting strategies.
+- **Zero-Sum Ledger:** Guaranteed mathematical integrity. Debts and credits sum to exactly zero.
+- **Real-Time Group Chat:** Persistent, per-expense WebSocket chat rooms for context-specific conversations.
+- **Smart Data Ingestion:** 18-rule bulk CSV importing engine with interactive duplicate detection and warning resolution.
+- **Client-Side Analytics:** Instantaneous group spending trends and activity feeds calculated locally for zero latency.
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ Architecture & Technology Stack
+
+The application relies on a decoupled Client/Server architecture using a monolithic Django backend and a React SPA.
 
 ### Frontend
-- **React.js (Vite):** Lightning-fast modern frontend framework.
-- **Tailwind CSS:** Utility-first CSS framework used for the beautiful 3D effects, gradients, and responsive layouts.
-- **Lucide React:** Beautiful, consistent iconography.
-- **React Router DOM:** Client-side routing for seamless page transitions.
-- **Axios:** For handling REST API requests to the backend.
-- **Native WebSockets:** Used for the real-time chat infrastructure.
+- **Framework:** React 18 / Vite 5
+- **Styling:** Tailwind CSS 3.4 (Glassmorphism design system)
+- **State Management:** React Context API + Custom Hooks (`useImport`, `useGlobalBalance`)
+- **Networking:** Axios + Native WebSockets
 
 ### Backend
-- **Django & Django REST Framework (DRF):** Robust, scalable Python backend API.
-- **Django Channels:** Asynchronous WebSocket handling for real-time features.
-- **Daphne:** ASGI server to run the asynchronous Python application.
-- **SimpleJWT:** JSON Web Token authentication standard.
-- **SQLite:** Lightweight relational database (easily swappable for PostgreSQL).
+- **Framework:** Python 3.11+ / Django 4.2 / Django REST Framework
+- **Asynchronous Layer:** Django Channels 4.x / Daphne ASGI Server
+- **Database:** PostgreSQL 15 (Supabase) in Production / SQLite3 natively local.
+- **Authentication:** JWT (JSON Web Tokens) via `simplejwt`
 
 ---
 
-## 🚀 How it Works (Under the Hood)
+## 🗂️ Repository Structure
 
-1. **The Ledger System:** When an expense is added, the backend calculates `ExpenseSplits`. It records who paid and who owes. 
-2. **Net Balance Algorithm:** The `compute_group_balances` service dynamically aggregates all historical expenses and settlements in a group. It cancels out reciprocal debts (if I owe you $10, and you owe me $10, it zeroes out) and returns a clean list of net debts.
-3. **Real-time Protocol:** When you open an expense chat, the React frontend upgrades the HTTP connection to a WebSocket connection via Django Channels. Messages are broadcasted to all users currently subscribed to that specific `expense_id` channel.
+```text
+splitwise-clone/
+├── backend/                  # Django API & Channels 
+│   ├── core/                 # Settings, ASGI, WSGI
+│   ├── apps/                 
+│   │   ├── users/            # JWT Auth & User Model
+│   │   ├── groups/           # Group & Membership logic
+│   │   ├── expenses/         # Core expense ledgers
+│   │   ├── settlements/      # Debt repayment logic
+│   │   ├── chat/             # WebSocket implementations
+│   │   └── importer/         # CSV bulk ingestion engine
+│   ├── services/             # Core Business Logic (Math & Balances)
+│   ├── manage.py             # Django entry point
+│   └── requirements.txt      # Python dependencies
+├── frontend/                 # React SPA
+│   ├── src/
+│   │   ├── components/       # Reusable UI elements
+│   │   ├── context/          # Global state
+│   │   ├── hooks/            # Complex state machines
+│   │   ├── pages/            # View components
+│   │   └── api/              # Axios configurations
+│   ├── vite.config.js        # Build tool config
+│   └── tailwind.config.js    # Design system tokens
+├── SCOPE.md                  # Project requirements & User Journeys
+├── DECISIONS.md              # Architectural Decision Records (ADRs)
+├── AI_CONTEXT.md             # The Living System Document
+└── AI_USAGE.md               # AI Agent prompting workflows
+```
 
-## ⚙️ Running Locally
+---
 
-### Backend Setup
+## ⚙️ Installation & Environment Setup
+
+### 1. Backend Setup
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-# Run the ASGI server for WebSockets + HTTP
-daphne -p 8000 core.asgi:application
 ```
 
-### Frontend Setup
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
 
-The frontend runs on `http://localhost:5173` and communicates with the backend on `http://localhost:8000`.
+### 3. Configuration (.env)
+Create a `.env` file in the `backend/` directory:
+```env
+DEBUG=True
+SECRET_KEY=your-super-secret-key
+# DATABASE_URL=postgres://user:pass@host:port/dbname (Omit to fallback to local SQLite)
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+```
 
-## How to Import expenses_export.csv
+---
 
-1. Log in → click "Import CSV" in sidebar
-2. Select target group from dropdown
-3. Drop expenses_export.csv onto the upload area
-4. Click "Validate CSV" — all 42 rows parsed and validated
-5. Review the Data Conflict & Import Report:
-   - Emerald rows = clean, ready to approve
-   - Amber rows = warnings (auto-cleaned), review and approve
-   - Red rows = rejected (missing payer, invalid date, etc.)
-   - Purple rows = conflicting duplicates, require your decision
-   - Grey rows = exact duplicates, automatically skipped
-6. Click any row to expand full issue details and policy explanation
-7. Click "✓ Approve Normalisation" on rows you want to import
-8. Click "Approve All Valid" to bulk-approve all non-flagged rows
-9. Click "Confirm Ingestion (N rows)" to write to the live database
-10. Download the import report for audit purposes
+## 💻 Development Workflow & Running Locally
 
-## AI Tools Used
-Claude (Anthropic) — see AI_USAGE.md for full log.
+The app requires both the backend ASGI server and the frontend Vite server to run simultaneously.
+
+**Terminal 1 (Backend):**
+```bash
+cd backend
+source .venv/bin/activate
+daphne -p 8000 core.asgi:application
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd frontend
+npm run dev
+```
+Navigate to `http://localhost:5173`.
+
+---
+
+## 🧪 Testing Instructions
+
+The core mathematical invariants and parsing engines are heavily tested in Django.
+```bash
+cd backend
+# Test the Zero-Sum math engine and balance ledgers:
+python manage.py test tests.test_splitting tests.test_balances -v 2
+
+# Test the 18-rule CSV Validation pipeline:
+python manage.py test apps.importer.tests -v 2
+```
+
+---
+
+## 🚀 Build & Deployment Process
+
+### Frontend (Vercel)
+The frontend is optimized for deployment on Vercel. 
+```bash
+cd frontend
+npm run build
+```
+This generates the optimized bundle in `frontend/dist/`. Set `VITE_API_BASE_URL` in your Vercel project environment settings.
+
+### Backend (Render.com)
+The backend is designed for Render.com as an ASGI Web Service.
+- **Build Command:** `pip install -r requirements.txt && python manage.py migrate`
+- **Start Command:** `daphne -b 0.0.0.0 -p 8000 core.asgi:application`
+- **Infrastructure:** Requires a connected Redis instance (for Django Channels) and Supabase PostgreSQL instance.
+
+### CI/CD Overview
+Currently, deployment is triggered manually via GitHub hooks to Vercel/Render. Future iterations will include GitHub Actions to block deployments if `manage.py test` fails.
+
+---
+
+## 🚨 Troubleshooting Guide
+
+- **WebSocket Connection Fails (`::1` IPv6 error):** Chrome DevTools sometimes forces `localhost` to resolve to IPv6, which Daphne does not bind to by default. **Fix:** Ensure Vite and Axios proxy configurations explicitly point to `127.0.0.1` instead of `localhost`.
+- **Foreign Key Constraints (Local DB):** Because local development defaults to SQLite, some strict JSONField constraints may behave differently than in Production Postgres. If encountering weird migrations, delete `db.sqlite3` and re-run `migrate`.
+- **Users disappear after test runs:** Running `manage.py flush` clears the database. Register a new user via the UI.
+
+---
+
+## 🔐 Security Considerations
+
+- **JWT Storage:** Access tokens are stored in React memory. Refresh tokens must be stored in `HttpOnly` cookies to prevent XSS exfiltration (WIP configuration for production).
+- **Service Layer Abstraction:** Developers must NEVER write direct `.update()` calls to the database regarding balances or expenses. All modifications must pipe through `services/splitting.py` to prevent unauthorized ledger tampering.
+- **Auth Gates:** All API endpoints (except `/api/v1/auth/*`) require a valid Bearer token.
+
+---
+
+## 🤝 Contributing Guidelines
+
+1. **Implementation Plans:** All non-trivial PRs require a markdown Implementation Plan attached to the issue before coding begins.
+2. **Zero Regressions:** PRs will be rejected if the `test_splitting.py` zero-sum invariant tests fail.
+
+---
+
+## 🤖 AI Tools & Usage
+
+This project heavily leveraged AI tools (specifically **Claude 3.5 Sonnet / Antigravity Agent**) acting as an autonomous pair programmer for full-stack implementation, testing, and documentation generation. 
+
+**Key Prompts Used:**
+- *"Build Phase 1 of a CSV importer. Create the parser and validator services. Do not touch the frontend yet. Use the `Decimal` class for all math."*
+- *"Implement Django Channels for real-time WebSockets on the expense detail view. Broadcast messages to all clients in the expense room."*
+- *"Create a robust React DropZone component for CSV ingestion that handles loading states, reads the file buffer, and POSTs to the importer endpoint."*
+
+For an exhaustive breakdown of the AI integration workflow, the coding standards enforced upon the AI, and a detailed log of 3 specific cases where the AI made a mistake, how it was caught, and how it was corrected, please read the [AI_USAGE.md](./AI_USAGE.md) file.
+
+---
+
+## 🗺️ Future Roadmap
+
+- [ ] Multi-currency live API exchange rates (fixing the current 85.00 INR hardcode).
+- [ ] Receipt OCR scanning using Vision models.
+- [ ] Mobile-responsive PWA (Progressive Web App) manifest enhancements.
+- [ ] S3 integration for attaching PDF invoices to expenses.
