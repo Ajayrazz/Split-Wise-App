@@ -18,11 +18,11 @@ headers_a = {"Authorization": f"Bearer {token_a}"}
 print("CHECK 2: Create group and add members")
 res_group = requests.post(f"{BASE_URL}/groups/", json={"name": "Test Group"}, headers=headers_a)
 group_id = res_group.json()['id']
-requests.post(f"{BASE_URL}/groups/{group_id}/members/", json={"email": "bob@example.com"}, headers=headers_a)
-requests.post(f"{BASE_URL}/groups/{group_id}/members/", json={"email": "charlie@example.com"}, headers=headers_a)
+requests.post(f"{BASE_URL}/groups/{group_id}/members/", json={"user": "bob@example.com"}, headers=headers_a)
+requests.post(f"{BASE_URL}/groups/{group_id}/members/", json={"user": "charlie@example.com"}, headers=headers_a)
 group_data = requests.get(f"{BASE_URL}/groups/{group_id}/", headers=headers_a).json()
-print("Group members:", [m['user']['username'] for m in group_data['members']])
-u_ids = {m['user']['username']: m['user']['id'] for m in group_data['members']}
+print("Group members:", [m['username'] for m in group_data['members']])
+u_ids = {m["username"]: m["user_id"] for m in group_data["members"]}
 
 print("CHECK 3: Create EQUAL expense")
 res_exp1 = requests.post(f"{BASE_URL}/groups/{group_id}/expenses/", json={
